@@ -50,7 +50,7 @@ export default {
             case 9:
               message = 'Username does not exist'
               break
-            case 9:
+            case 10:
               message = 'wrong user name or password'
               break
           }
@@ -59,6 +59,7 @@ export default {
           window.sessionStorage.setItem('uid', res.data[0]['uid'])
           this.remember && window.localStorage.setItem('username', this.form.uname)
           !this.remember && window.localStorage.removeItem('username')
+          this.$store.state.user = this.form.uname
           this.$emit('login');
           this.$message({
             message: 'Success',

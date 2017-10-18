@@ -23,7 +23,7 @@
   		</el-menu>
     </header>
 		<main>
-      <router-view v-on:login="login"></router-view>
+      <router-view v-on:login="login" v-on:logout="logout"></router-view>
   		<el-dialog title="Alert" v-model="dialogVisible" size="tiny">
   			<span>Are you sure?</span>
   			<span slot="footer" class="dialog-footer">

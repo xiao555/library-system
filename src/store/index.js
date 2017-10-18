@@ -13,7 +13,7 @@ export function createStore () {
       isLogin: false,
       lists: {},
       categorys: {},
-      user: {},
+      user: '',
       carts: [],
     },
     actions,

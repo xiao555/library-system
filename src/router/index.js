@@ -8,6 +8,7 @@ const Register = () => import('@/view/Register.vue')
 const IndexBooks = () => import('../view/IndexBooks.vue')
 
 const adminBooks = () => import('../view/adminBooks.vue')
+const Welcome = () => import('../view/Welcome.vue')
 
 Vue.use(Router)
 
@@ -16,8 +17,12 @@ export function createRouter () {
     mode: 'history',
     // scrollBehavior: () => ({ y: 0 }), // 切换路由时回到顶部
     routes: [
-      { path: '/', component: Index, redirect: '/books', children: [
+      { path: '/', component: Index, redirect: '/', children: [
         {
+          path: '/',
+          name: 'welcome',
+          component: Welcome
+        }, {
 					path: 'books',
 					name: 'IndexBooks',
 					component: IndexBooks

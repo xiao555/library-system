@@ -1,6 +1,6 @@
 <template>
 	<div class = "container">
-		<el-row :gutter="20">
+		<el-row>
 			<el-col :span="18">
 				<el-input
 					placeholder="Input book name to query"
@@ -17,7 +17,7 @@
 					</el-col>
 				</el-row>
 			</el-col>
-			<el-col :span = "6">
+			<el-col :span = "6" class="aside">
 				<el-row>Borrowed</el-row>
 				<el-row>
 					<el-col style = "margin-bottom: 10px;" :span = "24" v-for = "item in carts" :key = "item.bookid">
@@ -114,3 +114,8 @@
 		}
 	}
 </script>
+
+<style lang="stylus">
+  .aside
+    padding-left 20px
+</style>

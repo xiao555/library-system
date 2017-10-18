@@ -95,8 +95,15 @@
 					setTimeout(() => {
 						this.$router.push({ path: '/admin/login' })
 					}, 2000)
-					return
-	      }
+					return false
+	      } else if (sessionStorage.getItem('uid') != 1) {
+          this.$message.error('Permission denied, please sign in as admin!');
+          setTimeout(() => {
+            this.$emit('logout')
+					}, 2000)
+					return false
+        }
+        return true
 			},
       load () {
 				this.$bar.start()
@@ -108,7 +115,7 @@
 				this.$bar.finish()
       },
       addBook () {
-				this.isLogin()
+				if (!this.isLogin()) return;
         this.showCard = true
         this.book = {}
         this.cardConf = {
@@ -117,7 +124,7 @@
         }
       },
       handleEdit (index, row) {
-				this.isLogin()
+				if (!this.isLogin()) return;
         this.showCard = true
         this.book = row
         this.cardConf = {
@@ -134,8 +141,8 @@
             let message
             switch(res.code) {
               case 12:
-              message = 'Invaild Data'
-              break
+                message = 'Invaild Data'
+                break
               case 24:
                 message = 'Permission denied'
                 break
@@ -190,7 +197,7 @@
         }).catch(err => console.error(err))
       },
       handleDelete(index, row) {
-				this.isLogin()
+				if (!this.isLogin()) return;
         api.fetch('deleteBook', {
           uid: sessionStorage.getItem('uid'),
           bookid: row.bookid
