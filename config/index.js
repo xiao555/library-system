@@ -7,8 +7,10 @@ export const api = {
   getBook: `${url}bookinfo.php`,
   borrowBook: `${url}borrow.php`,
   returnBook: `${url}return.php`,
-  addBook: `${url}insert.php`,
+  addBook: `${url}uploadbookinfo.php`,
   deleteBook: `${url}delete.php`,
   userBookInfo: `${url}mybookinfo.php`,
-  editBook: `${url}alter.php`,
+  editBook: `${url}alterbook.php`,
 }
+
+export const imgUrl = 'http://120.78.129.29/danteng/img/'

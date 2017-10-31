@@ -104,7 +104,7 @@ export default {
   transition: width 1s, opacity 0.2s;
   opacity: 1;
   background-color: #efc14e;
-  z-index: 999999;
+  z-index: 98;
 }
 
 .header-mask
@@ -113,7 +113,7 @@ export default {
   top 0
   width 100%
   height 8px
-  z-index 999
+  z-index 99
   > div
     height 8px
     width 25%

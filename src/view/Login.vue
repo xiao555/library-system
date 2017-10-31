@@ -56,7 +56,8 @@ export default {
           }
           this.$message.error(message);
         } else if (res.code == 11) {
-          window.sessionStorage.setItem('uid', res.data[0]['uid'])
+          sessionStorage.setItem('uid', res.data[0]['uid'])
+          sessionStorage.setItem('uname', this.form.uname)
           this.remember && window.localStorage.setItem('username', this.form.uname)
           !this.remember && window.localStorage.removeItem('username')
           this.$store.state.user = this.form.uname

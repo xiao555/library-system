@@ -17,7 +17,7 @@
   				<el-submenu index="2">
   					<template slot="title">{{ user }}</template>
   					<el-menu-item index="2-1">
-  						<router-link :to="{ path: '/books' }">Your profile</router-link>
+  						<router-link :to="{ path: '/user/' + user }">Your profile</router-link>
   					</el-menu-item>
   					<el-menu-item index="2-2">
   						<router-link :to="{ path: '/books' }">Your borrow</router-link>
@@ -86,9 +86,18 @@ export default {
     }
   },
 
+  mounted () {
+    console.log(sessionStorage.getItem('uname'));
+    if (sessionStorage.getItem('uid'))  {
+      this.isLogin = true
+      this.$store.state.user = sessionStorage.getItem('uname')
+    }
+  },
+
   methods: {
     logout () {
       sessionStorage.removeItem('uid')
+      this.$store.state.user = ''
       this.dialogVisible = this.isLogin = false
       this.$router.push({ path: '/login' })
     },

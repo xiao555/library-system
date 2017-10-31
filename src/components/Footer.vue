@@ -13,7 +13,7 @@
 <style lang="stylus">
 footer
   max-width 800px
-  padding 50px 0
+  padding 10px 0
   margin 0 auto
   .copyright
     margin-top 30px

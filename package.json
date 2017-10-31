@@ -37,6 +37,7 @@
     "import-dir": "0.0.1",
     "lru-cache": "^4.1.1",
     "mocha": "^4.0.1",
+    "qs": "^6.5.1",
     "request": "^2.81.0",
     "request-promise": "^4.2.2",
     "rimraf": "^2.6.1",
@@ -59,9 +60,13 @@
     "webpack-node-externals": "^1.6.0"
   },
   "dependencies": {
-    "element-ui": "^1.4.6",
     "cross-env": "^4.0.0",
+    "element-ui": "^1.4.8",
+    "es6-promise": "^4.1.1",
     "firebase": "^4.3.0",
+    "form-data": "^2.3.1",
+    "isomorphic-fetch": "^2.2.1",
+    "isomorphic-form-data": "^1.0.0",
     "vue": "^2.5.1",
     "vue-router": "^2.7.0",
     "vue-server-renderer": "^2.5.1",
