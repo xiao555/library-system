@@ -13,7 +13,7 @@
     			</el-menu-item>
         </router-link>
         <el-row style="margin: 0 20px 0 0;float: right">
-        <template v-if="isLogin">
+        <!-- <template v-if="isLogin">
   				<el-submenu index="2">
   					<template slot="title">{{ user }}</template>
   					<el-menu-item index="2-1">
@@ -41,7 +41,7 @@
     					Sign up
     				</el-menu-item>
           </router-link>
-  			</template>
+  			</template> -->
       </el-row>
   		</el-menu>
   	</header>
@@ -88,7 +88,7 @@ export default {
 
   mounted () {
     console.log(sessionStorage.getItem('uname'));
-    if (sessionStorage.getItem('uid'))  {
+    if (sessionStorage.getItem('login'))  {
       this.isLogin = true
       this.$store.state.user = sessionStorage.getItem('uname')
     }
@@ -96,7 +96,7 @@ export default {
 
   methods: {
     logout () {
-      sessionStorage.removeItem('uid')
+      sessionStorage.removeItem('login')
       this.$store.state.user = ''
       this.dialogVisible = this.isLogin = false
       this.$router.push({ path: '/login' })

@@ -6,7 +6,7 @@
 		<div style="float: left; padding: 10px; max-width: 200px">
 			<router-link
 				class = "goods__link"
-				:to = "{ path: '/books/' + item.name }"
+				:to = "{ path: '/books/' + item.isbn }"
 			><h4><i>{{item.name}}</i></h4></router-link>
 			<div class="bottom clearfix">
 				<p>Type: {{ item.type }}</p>

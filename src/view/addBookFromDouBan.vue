@@ -1,16 +1,22 @@
 <template>
 	<div class="container">
-		<el-row :gutter = "20" >
-			<el-col :span="14">
-				<el-input placeholder="Input book name to query" icon="search" v-model="query" :on-icon-click="search">
+		<el-row >
+			<el-col :span="24">
+        <el-input placeholder="Input keywords to query" v-model="query">
+          <el-select style="width: 150px" v-model="queryType" slot="prepend" placeholder="Choose Type">
+            <el-option label="ISBN" value="1" ></el-option>
+            <el-option label="Book Name" value="2" selected></el-option>
+          </el-select>
+          <el-button slot="append" icon="search" @click="search"></el-button>
+        </el-input>
 				</el-input>
 			</el-col>
-      <el-col :span="6">
-        <el-input v-model="count" placeholder="Input count of result"></el-input>
+      <!-- <el-col :span="6">
+        <el-input v-model="count" max="100" placeholder="Input count of result"></el-input>
       </el-col>
       <el-col :span="2">
         <el-button  type="success" @click="search">Search</el-button>
-      </el-col>
+      </el-col> -->
 		</el-row>
     <el-row :gutter = "20" style="height: 450px; overflow-y: auto;">
       <el-col style = "margin-bottom: 10px;" :span = "12" v-for = "book in result" :key = "book.bookid">
@@ -38,14 +44,23 @@
           <el-button style="float: right;" size="small" type="primary" @click="upload()" >Upload</el-button>
         </div>
         <el-form ref="form" :model="book" label-width="80px" name="bookinfo">
+          <el-form-item label="ISBN">
+            <el-input v-model="book.isbn"></el-input>
+          </el-form-item>
           <el-form-item label="Name">
             <el-input v-model="book.name"></el-input>
           </el-form-item>
           <el-form-item label="Type">
             <el-input v-model="book.type"></el-input>
           </el-form-item>
+          <el-form-item label="Location">
+            <el-input v-model="book.location"></el-input>
+          </el-form-item>
           <el-form-item label="Number">
             <el-input v-model="book.number"></el-input>
+          </el-form-item>
+          <el-form-item label="Price">
+            <el-input v-model="book.price"></el-input>
           </el-form-item>
           <el-form-item label="Info">
             <el-input type="textarea" v-model="book.info" autosize></el-input>
@@ -71,7 +86,8 @@
 			return {
         title: 'BookList',
 				// 筛选图书条件
-				query: '',
+        query: '',
+        queryType: '',
         count: '',
         book: {},
         result: [],
@@ -82,29 +98,15 @@
 		methods: {
       search () {
         if (this.query == '') return []
-				var self = this
+        var self = this
 				return api.search({
           query: this.query,
-          count: this.count || 20,
+          type: this.queryType,
+          count: this.count || 100,
         }).then(res => {
+          console.log(res)
           this.result = res
         })
-			},
-			isLogin () {
-				if (!sessionStorage.getItem('uid')) {
-					this.$message.error('Please sign in first!');
-					setTimeout(() => {
-						this.$router.push({ path: '/admin/login' })
-					}, 2000)
-					return false
-	      } else if (sessionStorage.getItem('uid') != 1) {
-          this.$message.error('Permission denied, please sign in as admin!');
-          setTimeout(() => {
-            this.$emit('logout')
-					}, 2000)
-					return false
-        }
-        return true
 			},
       choose (book) {
 				// if (!this.isLogin()) return;
@@ -116,8 +118,6 @@
         let formdata = new FormData()
         // let blob = getImageBlob(this.book.myfile)
         // console.log(blob);
-        formdata.append('myfile', new Blob(), "photo.jpg")
-        formdata.append('uid', sessionStorage.getItem('uid'))
         for (var item in this.book) {
           if (this.book.hasOwnProperty(item) && item !== 'myfile') {
             if (item == 'info') {
@@ -146,7 +146,8 @@
             this.cancel()
             this.$message({
               message: 'Success',
-              type: 'success'
+              type: 'success',
+              duration: 1000
             });
           }
         }).catch(err => console.error(err))

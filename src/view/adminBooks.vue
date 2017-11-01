@@ -2,11 +2,11 @@
 	<div class="container">
 		<el-row :gutter="20">
 			<el-col :span="18">
-				<el-input placeholder="Input book name or type to query" icon="search" v-model="query">
+				<el-input placeholder="Input keywords to query" icon="search" v-model="query">
 				</el-input>
 			</el-col>
 			<el-col :span="6">
-      	<el-button style="width: 200; float: right" type="success" @click="addBook">Add Book</el-button>
+      	<el-button style="width: 200; float: right" type="danger" @click="handleDelete">Delete Book</el-button>
 			</el-col>
 		</el-row>
     <el-table
@@ -14,16 +14,31 @@
 			stripe
       style="width: 100%">
       <el-table-column
+        label="ISBN"
+        prop="isbn">
+      </el-table-column>
+      <el-table-column
         label="Name"
         prop="name">
+        <template slot-scope="scope">
+          <h6><i>{{ scope.row.name }}</i></h6>
+        </template>
       </el-table-column>
       <el-table-column
         label="Type"
         prop="type">
       </el-table-column>
       <el-table-column
+        label="Location"
+        prop="location">
+      </el-table-column>
+      <el-table-column
         label="Number"
         prop="number">
+      </el-table-column>
+      <el-table-column
+        label="Price"
+        prop="price">
       </el-table-column>
       <el-table-column
         label="Info"
@@ -38,46 +53,47 @@
           <el-button
             size="mini"
             type="danger"
-            @click="handleDelete(scope.$index, scope.row)">Delete</el-button>
+            @click="handleDeleteAll(scope.$index, scope.row)">Delete</el-button>
         </template>
       </el-table-column>
     </el-table>
     <el-card class="book-card" v-if="showCard">
       <div class="container">
         <div slot="header" class="clearfix">
-          <span style="line-height: 36px;">{{ cardConf.name }}</span>
+          <span style="line-height: 36px;">{{ card.name }}</span>
           <el-button style="float: right; margin-left: 10px" size="small" type="danger" @click="cancel()" >Cancel</el-button>
-          <el-button style="float: right;" size="small" type="primary" v-if="cardConf.type == 'add'" @click="add()" >Confirm</el-button>
-          <el-button style="float: right;" size="small" type="primary" v-if="cardConf.type == 'edit'" @click="edit($event)" >Confirm</el-button>
+          <el-button style="float: right;" size="small" type="primary" v-if="card.type == 'edit'" @click="edit($event)" >Confirm</el-button>
+          <el-button style="float: right;" size="small" type="primary" v-else-if="card.type == 'del'" @click="deleteBook($event)" >Confirm</el-button>
+          <el-button style="float: right;" size="small" type="primary" v-else-if="card.type == 'delall'" @click="DeleteAll($event)" >Confirm</el-button>
         </div>
-        <el-form ref="form" :model="book" label-width="80px" name="bookinfo">
+        <el-form v-if="card.type == 'edit'" ref="form" :model="book" label-width="80px" name="bookinfo">
+          <el-form-item label="ISBN">
+            <el-input v-model="book.isbn" disabled></el-input>
+          </el-form-item>
           <el-form-item label="Name">
-            <el-input v-model="book.name"></el-input>
+            <el-input v-model="book.name" disabled></el-input>
           </el-form-item>
-          <el-form-item label="Type">
-            <el-input v-model="book.type"></el-input>
+          <el-form-item label="Location">
+            <el-input v-model="book.location"></el-input>
           </el-form-item>
-          <el-form-item label="Number">
-            <el-input v-model="book.number"></el-input>
+          <el-form-item label="Price">
+            <el-input v-model="book.price"></el-input>
           </el-form-item>
-          <el-form-item label="Info">
-            <el-input type="textarea" v-model="book.info" autosize></el-input>
+        </el-form>
+        <el-form v-else-if="card.type == 'del'" ref="form" :model="book" label-width="80px" name="bookinfo">
+          <el-form-item label="BookID">
+            <el-input v-model="book.bookid"></el-input>
           </el-form-item>
-          <el-form-item label="Img">
-            <div class="" v-if="book.photo">
-              <img :src="`${imgUrl}${book.photo}.png`" style="width: 240px" alt="photo">
-              <el-button size="small" type="primary" @click="changeImg(book)">Change Photo</el-button>
-            </div>
-						<el-upload
-						  v-else
-						  class="avatar-uploader"
-						  action="https://jsonplaceholder.typicode.com/posts/"
-						  :show-file-list="false"
-							:on-change="onUploadImg"
-							:auto-upload="false">
-						  <img v-if="imageUrl" :src="imageUrl" class="avatar">
-						  <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-						</el-upload>
+          <el-form-item label="Reason">
+            <el-input type="textarea" v-model="book.reason" autosize></el-input>
+          </el-form-item>
+        </el-form>
+        <el-form v-else-if="card.type == 'delall'" ref="form" :model="book" label-width="80px" name="bookinfo">
+          <el-form-item label="ISBN">
+            <el-input v-model="book.isbn"></el-input>
+          </el-form-item>
+          <el-form-item label="Reason">
+            <el-input type="textarea" v-model="book.reason" autosize></el-input>
           </el-form-item>
         </el-form>
       </div>
@@ -101,13 +117,13 @@
         book: {},
         // result: [],
         showCard: false,
-        cardConf: {
-          name: '',
-          type: ''
-        },
         file: '',
 				imgUrl: imgUrl,
-				imageUrl: ''
+        imageUrl: '',
+        card: {
+          name: '',
+          type: ''
+        }
 			}
 		},
 
@@ -120,30 +136,13 @@
 				var self = this
 				return self.books.filter(function (book) {
 					return book.name.toLowerCase().indexOf(self.query.toLowerCase()) !== -1 ||
-						book.type.toLowerCase().indexOf(self.query.toLowerCase()) !== -1
+            book.type.toLowerCase().indexOf(self.query.toLowerCase()) !== -1 ||
+            book.isbn.indexOf(self.query) !== -1
 				})
 			}
     },
 
 		methods: {
-			// 上传图片钩子
-			onUploadImg(file) {
-				const isJPG = file.raw.type === 'image/jpeg';
-        const isLt2M = file.raw.size / 1024 / 1024 < 2;
-
-        if (!isJPG) {
-          return this.$message.error('Upload picture picture can only be JPG format!');
-        }
-        if (!isLt2M) {
-          return this.$message.error('Upload picture size can not exceed 2MB!');
-        }
-        this.imageUrl = URL.createObjectURL(file.raw);
-      },
-			// 更换图片
-      changeImg (book) {
-        book.photo = ''
-      },
-
       load (reload = false) {
 				if (!reload && this.$store.state.lists.hasOwnProperty('books')) {
 					return this.books = this.$store.state.lists['books']
@@ -152,77 +151,36 @@
         this.$store.dispatch('FETCH_LISTS', {
           model: 'getBook'
         }).then(() => {
-          this.books = this.$store.state.lists['books']
+          let books = this.$store.state.lists['books']
+					let reg = /^IMG\((\S+)\)/g
+					books.forEach(item => {
+						if(reg.test(item.info)) {
+              console.log(reg.exec(item.info))
+              item.photo = reg.exec(item.info)[1]
+						}
+					})
+					this.books = books
         })
 				this.$bar.finish()
       },
-      addBook () {
-        this.showCard = true
-        this.book = {}
-        this.cardConf = {
-          name: 'Add',
-          type: 'add'
-        }
-      },
       handleEdit (index, row) {
         this.showCard = true
-        this.book = row
-        this.cardConf = {
+        this.card = {
           name: 'Edit',
           type: 'edit'
         }
-      },
-      add () {
-				let file = document.querySelector('.avatar-uploader input[type="file"]').files[0]
-        let formdata = new FormData()
-        formdata.append('myfile', file)
-        formdata.append('uid', sessionStorage.getItem('uid'))
-        for (var item in this.book) {
-          if (this.book.hasOwnProperty(item) && item !== 'photo') {
-            formdata.append(item, this.book[item])
-          }
-        }
-        api.addBook(formdata).then(res => {
-          if (res.code != 26) {
-            let message
-            switch(res.code) {
-              case 12:
-                message = 'Invaild Data'
-                break
-              case 24:
-                message = 'Permission denied'
-                break
-              case 25:
-                message = 'Insert failed'
-                break
-            }
-            this.$message.error(message);
-          } else if (res.code == 26) {
-            this.cancel()
-            this.load(true)
-            this.$message({
-              message: 'Success',
-              type: 'success'
-            });
-          }
-        }).catch(err => console.error(err))
+        this.book = row
       },
       cancel () {
         this.showCard = false
+        this.card = {}
         this.book = {}
       },
       edit (e) {
         let formdata = new FormData()
-        if (document.querySelector('#myfile input')) {
-          formdata.append('myfile', document.querySelector('#myfile input').files[0])
-        }
-        formdata.append('uid', sessionStorage.getItem('uid'))
-        for (var item in this.book) {
-          if (this.book.hasOwnProperty(item) && item !== 'photo') {
-            // formdata.append(item, item == 'number' ? Number(this.book[item]) : this.book[item])
-            formdata.append(item, this.book[item])
-          }
-        }
+        formdata.append('location', this.book.location)
+        formdata.append('price', this.book.price)
+        formdata.append('isbn', this.book.isbn)
         api.editBook(formdata).then(res => {
           if (res.code != 32) {
             console.log(res);
@@ -249,11 +207,26 @@
           }
         }).catch(err => console.error(err))
       },
-      handleDelete(index, row) {
-        api.fetch('deleteBook', {
-          uid: sessionStorage.getItem('uid'),
-          bookid: row.bookid
-        }).then(res => {
+      handleDelete () {
+        this.showCard = true
+        this.card = {
+          name: 'Delete',
+          type: 'del'
+        }
+      },
+      handleDeleteAll (index, book) {
+        this.showCard = true
+        this.book.isbn = book.isbn
+        this.card = {
+          name: 'Delete',
+          type: 'delall'
+        }
+      },
+      deleteBook () {
+        let formdata = new FormData()
+        formdata.append('bookid', this.book.bookid)
+        formdata.append('reason', this.book.reason)
+        api.fetch('deleteBook', formdata).then(res => {
           if (res.code != 29) {
             let message
             switch(res.code) {
@@ -266,6 +239,34 @@
             }
             this.$message.error(message);
           } else if (res.code == 29) {
+            this.cancel()
+            this.load(true)
+            this.$message({
+              message: 'Success',
+              type: 'success'
+            });
+          }
+        }).catch(err => console.error(err))
+      },
+      DeleteAll (index, book) {
+        let formdata = new FormData()
+        formdata.append('isbn', this.book.isbn)
+        formdata.append('reason', this.book.reason)
+        api.fetch('deleteAllBook', formdata).then(res => {
+          console.log(res)
+          if (res.code != 29) {
+            let message
+            switch(res.code) {
+              case 27:
+                message = 'Permission denied'
+                break
+              case 28:
+                message = 'Delete failed'
+                break
+            }
+            this.$message.error(message);
+          } else if (res.code == 29) {
+            this.cancel()
             this.load(true)
             this.$message({
               message: 'Success',

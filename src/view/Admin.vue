@@ -59,7 +59,7 @@ export default {
   mounted () {
     if (!this.isLoginf()) return
     console.log(sessionStorage.getItem('uname'));
-    if (sessionStorage.getItem('uid'))  {
+    if (sessionStorage.getItem('login'))  {
       this.isLogin = true
       this.$store.state.user = sessionStorage.getItem('uname')
     }
@@ -67,7 +67,7 @@ export default {
 
   methods: {
     logout () {
-      sessionStorage.removeItem('uid')
+      sessionStorage.removeItem('login')
       this.dialogVisible = this.isLogin = false
       this.$router.push({ path: '/admin/login' })
     },
@@ -80,16 +80,10 @@ export default {
     },
     // 验证是否登录
     isLoginf () {
-      if (!sessionStorage.getItem('uid')) {
+      if (!sessionStorage.getItem('login')) {
         this.$message.error('Please sign in first!');
         setTimeout(() => {
           this.$router.push({ path: '/admin/login' })
-        }, 2000)
-        return false
-      } else if (sessionStorage.getItem('uid') != 1) {
-        this.$message.error('Permission denied, please sign in as admin!');
-        setTimeout(() => {
-          this.$emit('logout')
         }, 2000)
         return false
       }

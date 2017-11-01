@@ -8,6 +8,7 @@ const Index = () => import('@/view/Index.vue')
 // const Register = () => import('@/view/Register.vue')
 const IndexBooks = () => import('../view/IndexBooks.vue')
 const User = () => import('../view/User.vue')
+const BookInfo = () => import('../view/BookInfo.vue')
 
 const Admin = () => import('@/view/Admin.vue')
 const adminBooks = () => import('../view/adminBooks.vue')
@@ -31,7 +32,11 @@ export function createRouter () {
 					path: 'books',
 					name: 'IndexBooks',
 					component: IndexBooks
-				}, {
+        }, {
+          path: 'books/:isbn',
+          name: 'bookInfo',
+          component: BookInfo
+        }, {
           path: 'login',
           name: 'userLogin',
           component: Login

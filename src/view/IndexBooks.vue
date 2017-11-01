@@ -31,6 +31,7 @@
 					style = "width: 100%;"
 					type = "success"
 					@click = "order"
+					disabled
 				>Booking</el-button>
 			</el-col>
 		</el-row>
@@ -161,7 +162,7 @@
 					})
 					this.books = books
         })
-        if (sessionStorage.getItem('uid')) {
+        if (sessionStorage.getItem('login')) {
           // 如果用户id存在，就是已登录
           this.userLogin = true
         } else {
@@ -173,7 +174,7 @@
 				const carts = this.carts
 				// 要添加的这个商品是否已经存在购物车中了
 				const isChong = carts.some(book => {
-					return book.bookid === obj.bookid
+					return book.isbn === obj.isbn
 				})
 
 				if (isChong === false) {
@@ -191,7 +192,7 @@
 			},
 			order () {
 				// 首先判断用户是否登录
-        if (!sessionStorage.getItem('uid')) {
+        if (!sessionStorage.getItem('login')) {
 					this.$message.error('Please sign in first!');
 					setTimeout(() => {
 						this.$router.push('/login')
@@ -222,7 +223,7 @@
 						let item = carts[i]
 						let data = {
 							uid: uid,
-							bookid: item.bookid,
+							isbn: item.isbn,
 							borrowtime: borrowtime,
 							keeptime: keeptime
 						}

@@ -5,7 +5,8 @@ import { api } from '../../config'
 // 后端查询接口
 function fetch (method, query = {}) {
   return new Promise((resolve, reject) => {
-    axios.get(api[method],{ params: query }).then(res => {
+    axios.post(api[method], query).then(res => {
+      console.log(res)
       resolve(res.data)
     }).catch(err => reject(err))
   })
@@ -32,9 +33,10 @@ function addBook (data) {
 }
 
 // 豆瓣API查询接口
-function search ({query, count}) {
+function search ({query, type, count}) {
   return new Promise((resolve, reject) => {
-    fetchJsonp(`https://api.douban.com/v2/book/search?count=${count}&q=${query}`, {
+    fetchJsonp(type == 1 ? `https://api.douban.com/v2/book/isbn/${query}`
+      : `https://api.douban.com/v2/book/search?count=${count}&q=${query}`, {
 			jsonpCallback: 'callback'
 		})
 		.then(res => {
@@ -42,12 +44,34 @@ function search ({query, count}) {
 		})
 		.then(json => {
       // console.log(json);
+      if (type == 1) {
+        let data = {
+          name: json.title,
+          isbn: json.isbn13,
+          type: '',
+          number: 10,
+          info: json.summary ? json.summary : json.subtitle,
+          myfile: {}
+        }
+        for (var tag in json.tags) {
+          if (json.tags.hasOwnProperty(tag)) {
+            if ((/^[a-zA-Z]+$/).test(json.tags[tag].title)) {
+              data.type = json.tags[tag].title
+              break
+            }
+          }
+        }
+        data.myfile = typeof json.images == 'string' ? json.images : json.images.large
+        console.log(data)
+        return resolve([data])
+      }
       let results = []
       // 处理过滤
       json.books.forEach(item => {
         if (item.images == '') return;
         let data = {
           name: item.title,
+          isbn: item.isbn13,
           type: '',
           number: 10,
           info: item.summary ? item.summary : item.subtitle,

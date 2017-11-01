@@ -5,7 +5,7 @@
       <form :model="form">
         <div class="item">
           <label for="username">Username</label>
-          <input type="text" id="username" v-model="form.uname" required>
+          <input type="text" id="name" v-model="form.uname" required>
         </div>
         <div class="item">
           <label for="password">Password</label>
@@ -30,17 +30,16 @@ export default {
   data () {
     return {
       title: 'Sign in',
-      form: {
-        uname: '',
-        passwd: ''
-      },
+      form: {},
       remember: false
     }
   },
   methods: {
     onSubmit () {
-      this.success = this.error = false
-      api.fetch('login', this.form).then(res => {
+      let formdata = new FormData();
+      formdata.append('uname', this.form.uname)
+      formdata.append('passwd', this.form.passwd)
+      api.fetch('login', formdata).then(res => {
         if (res.code != 11) {
           let message
           switch(res.code) {
@@ -56,7 +55,7 @@ export default {
           }
           this.$message.error(message);
         } else if (res.code == 11) {
-          sessionStorage.setItem('uid', res.data[0]['uid'])
+          sessionStorage.setItem('login', 1)
           sessionStorage.setItem('uname', this.form.uname)
           this.remember && window.localStorage.setItem('username', this.form.uname)
           !this.remember && window.localStorage.removeItem('username')
@@ -64,7 +63,8 @@ export default {
           this.$emit('login');
           this.$message({
             message: 'Success',
-            type: 'success'
+            type: 'success',
+            duration: 1000
           });
           setTimeout(() => {
             this.$router.push({ path: this.$route.path.replace('/login', '/books') })
