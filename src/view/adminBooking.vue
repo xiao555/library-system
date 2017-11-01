@@ -179,6 +179,8 @@ export default {
           }
           this.$message.error(message);
         } else if (res.code == 22) {
+          this.borrows = []
+          this.users = {}
           res.data.forEach(item => {
             if (this.users.hasOwnProperty(item.uid)) return;
             this.users[item.uid] = item
