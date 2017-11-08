@@ -3,11 +3,13 @@ import Router from 'vue-router'
 
 const Welcome = () => import('../view/Welcome.vue')
 const Login = () => import('@/view/Login.vue')
+const userLogin = () => import('@/view/userLogin.vue')
 
 const Index = () => import('@/view/Index.vue')
 // const Register = () => import('@/view/Register.vue')
 const IndexBooks = () => import('../view/IndexBooks.vue')
-const User = () => import('../view/User.vue')
+const UserBorrow = () => import('../view/UserBorrow.vue')
+const UserInfo = () => import('../view/UserInfo.vue')
 const BookInfo = () => import('../view/BookInfo.vue')
 
 const Admin = () => import('@/view/Admin.vue')
@@ -39,7 +41,7 @@ export function createRouter () {
         }, {
           path: 'login',
           name: 'userLogin',
-          component: Login
+          component: userLogin
         },
         // {
         //   path: 'register',
@@ -49,7 +51,12 @@ export function createRouter () {
         {
           path: 'user/:id',
           name: 'profile',
-          component: User
+          component: UserInfo
+        },
+        {
+          path: 'borrows/:id',
+          name: 'borrows',
+          component: UserBorrow
         }
       ]},
       { path: '/admin', component: Admin, children: [

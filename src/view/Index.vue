@@ -13,19 +13,16 @@
     			</el-menu-item>
         </router-link>
         <el-row style="margin: 0 20px 0 0;float: right">
-        <!-- <template v-if="isLogin">
+        <template v-if="isLogin">
   				<el-submenu index="2">
   					<template slot="title">{{ user }}</template>
   					<el-menu-item index="2-1">
   						<router-link :to="{ path: '/user/' + user }">Your profile</router-link>
   					</el-menu-item>
   					<el-menu-item index="2-2">
-  						<router-link :to="{ path: '/books' }">Your borrow</router-link>
+  						<router-link :to="{ path: '/borrows/' + user }">Your borrow</router-link>
   					</el-menu-item>
   					<el-menu-item index="2-3">
-  						<router-link :to = "{ path: '/books' }">Your orders</router-link>
-  					</el-menu-item>
-  					<el-menu-item index="2-4">
   						<a @click="logout()">Sign out</a>
   					</el-menu-item>
   				</el-submenu>
@@ -41,7 +38,7 @@
     					Sign up
     				</el-menu-item>
           </router-link>
-  			</template> -->
+  			</template>
       </el-row>
   		</el-menu>
   	</header>

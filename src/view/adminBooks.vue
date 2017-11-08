@@ -12,7 +12,8 @@
     <el-table
       :data="result"
 			stripe
-      style="width: 100%">
+      style="width: 100%"
+      max-height="500">
       <el-table-column
         label="ISBN"
         prop="isbn">

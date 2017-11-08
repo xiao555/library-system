@@ -29,7 +29,9 @@
   		</el-menu>
     </header>
 		<main>
-      <router-view v-on:login="login" v-on:logout="logout"></router-view>
+      <transition name="fade" mode="out-in">
+        <router-view v-on:login="login" v-on:logout="logout"></router-view>
+      </transition>
   		<el-dialog title="Alert" v-model="dialogVisible" size="tiny">
   			<span>Are you sure?</span>
   			<span slot="footer" class="dialog-footer">

@@ -3,6 +3,7 @@ const url = 'http://120.78.129.29/danteng/'
 export const api = {
   register: `${url}insertuser.php`,
   login: `${url}login.php`,
+  userLogin: `${url}userlogin.php`,
   getUser: `${url}userinfo.php`,
   getBook: `${url}bookinfo.php`,
   borrowBook: `${url}borrow.php`,
@@ -17,6 +18,8 @@ export const api = {
   deleteUser: `${url}deleteuser.php`,
   deleteUserAccount: `${url}deleteuseraccount.php`,
   deleteAllBook: `${url}deleteallbook.php`,
+  myBookInfo: `${url}mybookinfo.php`,
+  myInfo: `${url}myinfo.php`,
 }
 
 export const imgUrl = 'http://120.78.129.29/danteng/img/'

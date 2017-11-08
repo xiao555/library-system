@@ -31,7 +31,8 @@
          prop="status"
          label="Status">
          <template slot-scope="scope">
-          <span >{{ scope.row.status == 1 ? 'borrowing' : 'returned' }}</span>
+          <span v-if="scope.row.status == 'return'" style="color: #13ce66; font-weight: bold">{{ scope.row.status }}ed</span>
+          <span v-else style="color: #f7ba2a; font-weight: bold">{{ scope.row.status }}</span>
          </template>
        </el-table-column>
      </el-table>
@@ -63,9 +64,9 @@ export default {
   methods: {
     load () {
       this.$bar.start()
-      api.fetch('userBookInfo', {
-        uid: sessionStorage.getItem('uid')
-      }).then(res => {
+      let data = new FormData()
+      data.append('uid', sessionStorage.getItem('uid'))
+      api.fetch('myBookInfo', data).then(res => {
         if (res.code != 22) {
           this.$bar.finish()
           let message
