@@ -11,6 +11,7 @@ export const api = {
   addBook: `${url}insertbook.php`,
   deleteBook: `${url}delete.php`,
   userBookInfo: `${url}theborrowhistory.php`,
+  userBorrowHistory: `${url}borrowhistory.php`,
   editBook: `${url}alterbook.php`,
   recharge: `${url}alteruseraccount.php`,
   deductions: `${url}deleteuseraccount.php`,
@@ -20,6 +21,13 @@ export const api = {
   deleteAllBook: `${url}deleteallbook.php`,
   myBookInfo: `${url}mybookinfo.php`,
   myInfo: `${url}myinfo.php`,
+  everyBook: `${url}everybook.php`,
+  reserve: `${url}reserve.php`,
+  unreserve: `${url}unreserve.php`,
+  reserveBook: `${url}reservation.php`,
+  reserveHistory: `${url}reservehistory.php`,
+  borrowReserve: `${url}borrowafterrsv.php`,
+  deleteReserve: `${url}deletereservation.php`,
 }
 
 export const imgUrl = 'http://120.78.129.29/danteng/img/'

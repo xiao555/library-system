@@ -1,16 +1,17 @@
 <template lang="html">
   <div class="container">
-    <h2>Hello, {{ user }}</h2>
+    <h2>Hello, {{ user.name }}</h2>
     <div class="content">
-      <p>UID: {{ info.uid }}</p>
-      <p>Account: {{ info.account }}</p>
-      <p>Borrowing: {{ info.numofbook }}</p>
+      <p>UID: {{ user.uid }}</p>
+      <p>Account: {{ user.account }}</p>
+      <p>Borrowing: {{ user.numofbook }}</p>
     </div>
   </div>
 </template>
 
 <script>
 import api from '@/api'
+import * as Conn from '../utils/connection'
 
 export default {
 
@@ -26,31 +27,24 @@ export default {
     }
   },
 
-  beforeMount () {
-    this.load()
-  },
+  // beforeMount () {
+  //   this.load()
+  // },
 
-  methods: {
-    load () {
-      this.$bar.start()
-      let data = new FormData()
-      data.append('uid', sessionStorage.getItem('uid'))
-      api.fetch('myInfo', data).then(res => {
-        if (res.code != 22) {
-          this.$bar.finish()
-          let message
-          switch(res.code) {
-            case 21:
-              message = 'Query failed, please reload.'
-              break
-          }
-          this.$message.error(message);
-        } else if (res.code == 22) {
-          this.info = res.data[0]
-        }
-      }).catch(err => console.error(err))
-    },
-  }
+  // methods: {
+  //   load () {
+  //     this.$bar.start()
+  //     Conn.getUserInfo({
+  //       uid: this.user.uid || sessionStorage.getItem('uid')
+  //     }).then(res => {
+  //       this.$bar.finish()
+  //       res.type ? this.success(res.msg) : this.error(res.msg)
+  //     }).catch(err => console.error(err))
+  //   },
+  //   success (data) {
+  //     this.info = data
+  //   }
+  // }
 }
 </script>
 

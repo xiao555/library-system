@@ -1,15 +1,15 @@
 <template>
-  <main class="login">
+  <div class="login">
     <h1 class="title">{{ title }}</h1>
     <div class="panel sign-form">
-      <form :model="form">
+      <form v-on:keyup.enter="onSubmit">
         <div class="item">
           <label for="username">Username</label>
-          <input type="text" id="name" v-model="form.uname" required>
+          <input type="text" id="username" v-model="uname" required>
         </div>
         <div class="item">
           <label for="password">Password</label>
-          <input type="password" id="password" v-model="form.passwd" required>
+          <input type="password" id="password" v-model="passwd" required>
         </div>
         <div class="item">
           <input type="checkbox" id="remember" v-model="remember"><label class="checkbox" for="remember">Remeber Me</label>
@@ -19,69 +19,59 @@
         </div>
       </form>
     </div>
-  </main>
+  </div>
 </template>
 
 <script>
 import api from '@/api'
+import * as Conn from '../utils/connection'
 
 export default {
   name: 'login',
   data () {
     return {
       title: 'Sign in',
-      form: {},
+      uname: '',
+      passwd: '',
       remember: false
     }
   },
   methods: {
     onSubmit () {
-      let formdata = new FormData();
-      formdata.append('uname', this.form.uname)
-      formdata.append('passwd', this.form.passwd)
-      api.fetch('login', formdata).then(res => {
-        if (res.code != 11) {
-          let message
-          switch(res.code) {
-            case 8:
-              message = 'The user name or password can not be empty'
-              break
-            case 9:
-              message = 'Username does not exist'
-              break
-            case 10:
-              message = 'wrong user name or password'
-              break
-          }
-          this.$message.error(message);
-        } else if (res.code == 11) {
-          sessionStorage.setItem('login', 1)
-          sessionStorage.setItem('uname', this.form.uname)
-          this.remember && window.localStorage.setItem('username', this.form.uname)
-          !this.remember && window.localStorage.removeItem('username')
-          this.$store.state.user = this.form.uname
-          this.$emit('login');
-          this.$message({
-            message: 'Success',
-            type: 'success',
-            duration: 1000
-          });
-          setTimeout(() => {
-            this.$router.push({ path: this.$route.path.replace('/login', '/books') })
-          }, 1000)
-        }
+      Conn.adminLogin({
+        uname: this.uname,
+        passwd: this.passwd
+      }).then(res => {
+        res.type ? this.success() : this.error(res.msg)
       }).catch(err => console.error(err))
+    },
+    success (data) {
+      sessionStorage.setItem('admin', 1)
+      this.remember ? localStorage.setItem('username', this.uname)
+                    : localStorage.removeItem('username')
+      this.$store.state.user = { name: this.uname }
+      this.$emit('login');
+      this.$message({
+        message: 'Success',
+        type: 'success',
+        duration: 1000
+      });
+      setTimeout(() => {
+        this.$router.push({ path: this.$route.path.replace('/login', '/booking') })
+      }, 1000)
+    },
+    error (msg) {
+      this.$message.error(msg);
     }
   },
   beforeMount () {
-    // console.log(this)
-    this.form.uname = window.localStorage.getItem('username') ? window.localStorage.getItem('username') : ''
+    this.uname = localStorage.getItem('username') ? localStorage.getItem('username') : ''
   }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style lang="stylus">
+<style lang="stylus" scoped>
 .panel
   border 1px solid #d8dee2
   padding 20px
@@ -122,11 +112,7 @@ form
     &:hover
       cursor pointer
       opacity .8
-main
-  clearfix()
-  overflow-y auto
-
-main.login
+div.login
   text-align center
   width 80%
   max-width 300px

@@ -4,9 +4,9 @@ import { api } from '../../config'
 
 // 后端查询接口
 function fetch (method, query = {}) {
+  console.log(method + ': ')
   return new Promise((resolve, reject) => {
     axios.post(api[method], query).then(res => {
-      console.log(res)
       resolve(res.data)
     }).catch(err => reject(err))
   })
@@ -33,7 +33,7 @@ function addBook (data) {
 }
 
 // 豆瓣API查询接口
-function search ({query, type, count}) {
+function search ({query, type = 1, count}) {
   return new Promise((resolve, reject) => {
     fetchJsonp(type == 1 ? `https://api.douban.com/v2/book/isbn/${query}`
       : `https://api.douban.com/v2/book/search?count=${count}&q=${query}`, {

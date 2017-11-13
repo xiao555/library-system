@@ -2,10 +2,10 @@
 	<div class="container">
 		<el-row >
 			<el-col :span="24">
-        <el-input placeholder="Input keywords to query" v-model="query">
+        <el-input placeholder="Input keywords to query" v-model="query" @input="search(query, queryType, start,success)">
           <el-select style="width: 150px" v-model="queryType" slot="prepend" placeholder="Choose Type">
-            <el-option label="ISBN" value="1" ></el-option>
-            <el-option label="Book Name" value="2" selected></el-option>
+            <el-option label="ISBN" value="1"></el-option>
+            <el-option label="Book Name" value="2"></el-option>
           </el-select>
           <el-button slot="append" icon="search" @click="search"></el-button>
         </el-input>
@@ -18,7 +18,7 @@
         <el-button  type="success" @click="search">Search</el-button>
       </el-col> -->
 		</el-row>
-    <el-row :gutter = "20" style="height: 450px; overflow-y: auto;">
+    <el-row v-loading="loading" element-loading-text="loding..." :gutter = "20" style="height: 450px; overflow-y: auto;">
       <el-col style = "margin-bottom: 10px;" :span = "12" v-for = "book in result" :key = "book.bookid">
         <el-card class="searh-item" :body-style="{ padding: '0px' }">
       		<div class="photo" style="float: left; padding: 10px;">
@@ -79,6 +79,7 @@
   import api from '@/api'
   import { imgUrl } from '../../config'
   import { getImageBlob } from '../utils/blob'
+  import * as _ from '../utils'
 
 	export default {
 		name: 'addBookFromDouBan',
@@ -87,27 +88,34 @@
         title: 'BookList',
 				// 筛选图书条件
         query: '',
-        queryType: '',
+        queryType: 'ISBN',
         count: '',
         book: {},
         result: [],
-        showCard: false
+        showCard: false,
+        loading: false
 			}
-		},
+    },
+    
+    computed: {
+      // 根据bookid获取书籍信息，利用防抖函数防止频繁发送请求
+      search () {
+        return _.debounce(function () {
+          if (arguments[0] == '') return arguments[3]([])
+          arguments[2]()
+          api.search({
+            query: arguments[0],
+            type: arguments[1],
+            count: 100,
+          }).then(res => {
+            console.log(res)
+            arguments[3](res)
+          })
+        }, 500)
+      },
+    },
 
 		methods: {
-      search () {
-        if (this.query == '') return []
-        var self = this
-				return api.search({
-          query: this.query,
-          type: this.queryType,
-          count: this.count || 100,
-        }).then(res => {
-          console.log(res)
-          this.result = res
-        })
-			},
       choose (book) {
 				// if (!this.isLogin()) return;
         this.showCard = true
@@ -156,8 +164,13 @@
         this.showCard = false
         this.book = {}
       },
-      addAll () {
-
+      start () {
+        this.result = []
+        this.loading = true
+      },
+      success (data) {
+        this.result = data
+        this.loading = false
       }
 		}
 	}

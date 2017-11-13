@@ -22,7 +22,8 @@ export default {
 
 .img
   border-radius 10%
-  width 500px
+  width 80%
+  max-width 500px
   height 300px
   overflow hidden
   margin 0 auto

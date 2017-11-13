@@ -11,9 +11,9 @@
 			<div class="bottom clearfix">
 				<p>Type: {{ item.type }}</p>
 				<p>Number: {{ item.number }}</p>
-				<el-button
-					@click="choose(item)"
-				>Add to Cart</el-button>
+				<el-tooltip :disabled="canBook" :content="tooltip" placement="right" effect="dark">
+					<el-button @click="canBook ? choose(item) : ''">Book</el-button>
+				</el-tooltip>
 			</div>
 		</div>
 	</el-card>
@@ -25,10 +25,27 @@
 		name: 'Goods',
 		data () {
 			return {
+				tooltip: ''
 			}
 		},
 		// 从父组件传过来的属性
 		props: ['item', 'choose'],
+
+		computed: {
+			isLogin () {
+				return this.$store.state.user
+			},
+			canBook () {
+				if (new Date().getDay() == 4) {
+					this.tooltip = 'Can not reserve on Thursday'
+					return false
+				} else if (!sessionStorage.getItem('uid')) {
+					this.tooltip = 'Please sign in first'
+					return false
+				}
+				return true
+			}
+		}
 	}
 </script>
 <style lang="stylus">
@@ -44,6 +61,7 @@
 
 	.good-item
 		height 222px
+		overflow-y auto
 
 	.photo
 		width 140px

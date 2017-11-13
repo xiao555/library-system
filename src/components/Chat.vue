@@ -2,6 +2,9 @@
   <div class="chatComponent">
     <div class="chat-button" @click="toggleChat">
       <i class="fa fa-comment-o" aria-hidden="true"></i>
+      <div class="tips" v-if="showTip">
+        {{ unreadMsg }}
+      </div>
     </div>
     <transition name="fade">
       <div class="chatroom" v-if="showChat" @keyup.esc="toggleChat">
@@ -58,85 +61,99 @@ export default {
       socket: {},
       inputMessage: "",
       typing: false,
-      lastTypingTime: ""
+      lastTypingTime: "",
+      unreadMsg: 0,
+      showTip: false
     }
   },
 
   watch: {
     inputMessage: function (val) {
       this.updateTyping()
+    },
+    unreadMsg: function (val) {
+      if (this.unreadMsg > 0) {
+        this.showTip = true;
+      }
     }
   },
 
   mounted () {
-
     this.socket = io('http://localhost:8007');
-
-    // Socket events
-
-    // Whenever the server emits 'login', log the login message
-    this.socket.on('login', data => {
-      this.connected = true;
-      // Display the welcome message
-      var message = "Welcome to Library Chat – ";
-      this.logMessage(message, {
-        prepend: true
-      });
-      this.addParticipantsMessage(data);
-    });
-
-    // Whenever the server emits 'new message', update the chat body
-    this.socket.on('new message', data => {
-      this.addChatMessage(data);
-    });
-
-    // Whenever the server emits 'user joined', log it in the chat body
-    this.socket.on('user joined', data => {
-      this.logMessage(data.username + ' joined');
-      this.addParticipantsMessage(data);
-    });
-
-    // Whenever the server emits 'user left', log it in the chat body
-    this.socket.on('user left', data => {
-      this.logMessage(data.username + ' left');
-      this.addParticipantsMessage(data);
-      this.removeChatTyping(data);
-    });
-
-    // Whenever the server emits 'typing', show the typing message
-    this.socket.on('typing', data =>{
-      this.addChatTyping(data);
-    });
-
-    // Whenever the server emits 'stop typing', kill the typing message
-    this.socket.on('stop typing', data => {
-      this.removeChatTyping(data);
-    });
-
-    this.socket.on('disconnect', () => {
-      this.logMessage('you have been disconnected');
-    });
-
-    this.socket.on('reconnect', () => {
-      this.logMessage('you have been reconnected');
-      if (this.username) {
-        this.socket.emit('add user', this.username);
-      }
-    });
-
-    this.socket.on('reconnect_error', () => {
-      this.logMessage('attempt to reconnect has failed');
-    });
   },
 
   methods: {
+    initSocketEvent () {
+      // Whenever the server emits 'login', log the login message
+      this.socket.on('login', data => {
+        this.connected = true;
+        // Display the welcome message
+        var message = "Welcome to Library Chat – ";
+        this.logMessage(message, {
+          prepend: true
+        });
+        this.addParticipantsMessage(data);
+      });
+
+      // Whenever the server emits 'new message', update the chat body
+      this.socket.on('new message', data => {
+        this.addChatMessage(data);
+      });
+
+      // Whenever the server emits 'user joined', log it in the chat body
+      this.socket.on('user joined', data => {
+        this.logMessage(data.username + ' joined');
+        this.addParticipantsMessage(data);
+      });
+
+      // Whenever the server emits 'user left', log it in the chat body
+      this.socket.on('user left', data => {
+        this.logMessage(data.username + ' left');
+        this.addParticipantsMessage(data);
+        this.removeChatTyping(data);
+      });
+
+      // Whenever the server emits 'typing', show the typing message
+      this.socket.on('typing', data =>{
+        this.addChatTyping(data);
+      });
+
+      // Whenever the server emits 'stop typing', kill the typing message
+      this.socket.on('stop typing', data => {
+        this.removeChatTyping(data);
+      });
+
+      this.socket.on('disconnect', () => {
+        this.logMessage('you have been disconnected');
+      });
+
+      this.socket.on('reconnect', () => {
+        this.logMessage('you have been reconnected');
+        if (this.username) {
+          this.socket.emit('add user', this.username);
+        }
+      });
+
+      this.socket.on('reconnect_error', () => {
+        this.logMessage('attempt to reconnect has failed');
+      });
+    },
     toggleChat ()  {
       this.chatLogin = this.username === ''
       this.showChat = !this.showChat
+      setTimeout(() => {
+        let messageArea = document.querySelector('.messages')
+        if (messageArea) {
+          messageArea.scrollTop = messageArea.scrollHeight - messageArea.offsetHeight
+          this.showTip = false
+          this.unreadMsg = 0
+        }
+      }, 1000)
     },
     loginChat () {
       this.username = this.nickname
       this.chatLogin = false
+      this.initSocketEvent()
       this.username = xssFilters.inHTMLData(this.username)
       this.socket.emit('add user', this.username)
     },
@@ -147,8 +164,12 @@ export default {
         content: message
       }
       this.messages.push(data)
-      let messageArea = document.querySelector('.messages')
-      messageArea.scrollTop = messageArea.scrollHeight - messageArea.offsetHeight
+      let messageArea = document.querySelector('.messages');
+      if (messageArea) {
+        messageArea.scrollTop = messageArea.scrollHeight - messageArea.offsetHeight
+      } else {
+        this.unreadMsg++
+      }
     },
     addParticipantsMessage (data) {
       var message = '';
@@ -173,7 +194,11 @@ export default {
 
       this.messages.push(message)
       let messageArea = document.querySelector('.messages')
-      messageArea.scrollTop = messageArea.scrollHeight - messageArea.offsetHeight
+      if (messageArea) {
+        messageArea.scrollTop = messageArea.scrollHeight - messageArea.offsetHeight
+      } else if (message.content !== 'is typing') {
+        this.unreadMsg++
+      }
     },
     // Removes the visual chat typing message
     removeChatTyping (data) {
@@ -264,6 +289,17 @@ export default {
       font-size 24px
   i
     font-size 20px
+  .tips
+    position absolute
+    top -5px
+    right -5px
+    width 20px
+    height 20px
+    border-radius 50%
+    background red
+    color #fff
+    font-size 12px
+    line-height 20px
 
 .chatroom
   position fixed

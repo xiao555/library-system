@@ -3,7 +3,7 @@ import Router from 'vue-router'
 
 const Welcome = () => import('../view/Welcome.vue')
 const Login = () => import('@/view/Login.vue')
-const userLogin = () => import('@/view/userLogin.vue')
+const userLogin = () => import('@/view/UserLogin.vue')
 
 const Index = () => import('@/view/Index.vue')
 // const Register = () => import('@/view/Register.vue')
@@ -15,6 +15,7 @@ const BookInfo = () => import('../view/BookInfo.vue')
 const Admin = () => import('@/view/Admin.vue')
 const adminBooks = () => import('../view/adminBooks.vue')
 const adminBooking = () => import('../view/adminBooking.vue')
+const adminHistory = () => import('../view/adminHistory.vue')
 const adminUsers = () => import('../view/adminUsers.vue')
 const Douban = () => import('../view/addBookFromDouBan.vue')
 
@@ -80,6 +81,10 @@ export function createRouter () {
           path: 'users',
           name: 'adminUsers',
           component: adminUsers
+        }, {
+          path: 'history',
+          name: 'adminHistory',
+          component: adminHistory
         }
       ]}
     ]

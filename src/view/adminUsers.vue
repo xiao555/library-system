@@ -40,8 +40,11 @@
      <el-table-column
       fixed="right"
       label="Action"
-      width="180">
+      width="330">
       <template slot-scope="scope">
+        <el-button
+          size="mini"
+          @click="borrow(scope.$index, scope.row)">Borrow</el-button>
         <el-button
           size="mini"
           @click="recharge(scope.$index, scope.row)">Recharge</el-button>
@@ -55,12 +58,13 @@
    <el-card class="book-card new-user" v-if="showCard">
      <div class="container">
        <div slot="header" class="clearfix">
-         <span style="line-height: 36px;">{{ card.name }}</span>
+         <span style="line-height: 36px;">{{ card }}</span>
          <el-button style="float: right; margin-left: 10px" size="small" type="danger" @click="cancel()" >Cancel</el-button>
-         <el-button style="float: right;" size="small" type="primary" v-if="card.type == 'new'" @click="onSubmit()" >Confirm</el-button>
-         <el-button style="float: right;" size="small" type="primary" v-if="card.type == 'recharge'" @click="handleRecharge()" >Confirm</el-button>
+         <el-button style="float: right;" size="small" type="primary" v-if="card == 'New User'" @click="onSubmit()" >Confirm</el-button>
+         <el-button style="float: right;" size="small" type="primary" v-if="card == 'Recharge'" @click="handleRecharge()" >Confirm</el-button>
+         <el-button style="float: right;" size="small" type="primary" v-if="card == 'Borrow'" @click="handleBorrow()" >Confirm</el-button>
        </div>
-       <el-form v-if="card.type == 'new'" ref="form" :model="user" label-width="80px" name="bookinfo">
+       <el-form v-if="card == 'New User'" ref="form" :model="user" label-width="80px" name="bookinfo">
          <el-form-item label="Name">
            <el-input v-model="user.name"></el-input>
          </el-form-item>
@@ -68,12 +72,26 @@
            <el-input v-model="user.account" type="count"></el-input>
          </el-form-item>
        </el-form>
-       <el-form v-if="card.type == 'recharge'" ref="form" :model="user" label-width="80px" name="bookinfo">
+       <el-form v-if="card == 'Recharge'" ref="form" :model="user" label-width="80px" name="bookinfo">
          <el-form-item label="UID">
            <el-input v-model="user.uid" disabled></el-input>
          </el-form-item>
          <el-form-item label="Amount">
            <el-input v-model="user.recharge" type="count" placeholer="Recharge amount"></el-input>
+         </el-form-item>
+       </el-form>
+       <el-form v-if="card == 'Borrow'" ref="form" :model="user" label-width="80px" name="bookinfo">
+         <el-form-item label="UID">
+           <el-input v-model="user.uid" disabled></el-input>
+         </el-form-item>
+         <el-form-item label="BookID">
+           <el-input v-model="user.bookid" type="text" placeholer="Please scan code input" @input="getBook(user.bookid, showBookName)"></el-input>
+         </el-form-item>
+         <el-form-item label="Book">
+           <el-input v-model="bookname" type="text" placeholer="Your book name"></el-input>
+         </el-form-item>
+         <el-form-item label="Borrow Time">
+           <el-input v-model="user.borrowtime" type="text" disabled></el-input>
          </el-form-item>
        </el-form>
      </div>
@@ -83,6 +101,9 @@
 
 <script>
 import api from '@/api'
+import * as DateUtils from '../utils/date'
+import * as Conn from '../utils/connection'
+import * as _ from '../utils'
 
 export default {
 
@@ -92,7 +113,9 @@ export default {
       users: [],
       showCard: false,
       user: {},
-      card: {}
+      card: "",
+      utils: _,
+      bookname: ''
     }
   },
 
@@ -100,10 +123,20 @@ export default {
     result () {
       if (this.query == '') return this.users
       return this.users.reduce((pre, cur) => {
-        if (cur.uname.indexOf(this.query) !== -1 || cur.uid.indexOf(this.query) !== -1) pre.push(cur)
+        if (cur.name.toLowerCase().indexOf(this.query.toLowerCase()) !== -1 || cur.uid.indexOf(this.query) !== -1) pre.push(cur)
         return pre
       }, [])
-    }
+    },
+    // 根据bookid获取书籍信息，利用防抖函数防止频繁发送请求
+    getBook () {
+      return _.debounce(function () {
+        Conn.everyBook({
+          bookid: arguments[0]
+        }).then(res => {
+          res.type ? arguments[1](res.msg.name) : arguments[1]('Not Found')
+        }).catch(err => console.error(err))
+      }, 500)
+    },
   },
 
   beforeMount () {
@@ -111,6 +144,7 @@ export default {
   },
 
   methods: {
+    // 加载用户信息，reload = true 强制刷新
     load (reload = false) {
       if (!reload && this.$store.state.lists.hasOwnProperty('users')) {
         return this.users = this.$store.state.lists['users']
@@ -132,82 +166,84 @@ export default {
         }
       })
     },
+    // 显示书名
+    showBookName (name) {
+      console.log(name)
+      this.bookname = name
+    },
+    // 显示创建用户弹出层
     createUser () {
       this.user = {}
-      this.card = {
-        name: 'New User',
-        type: 'new'
-      }
-      this.showCard = true
+      this.cardInfo('New User')
     },
-    cancel () {
-      this.showCard = false
-    },
-    onSubmit () {
-      // if (this.user.repasswd !== this.user.passwd) {
-      //   this.$message.error('The password entered twice is inconsistent');
-      //   return
-      // }
-      let formdata = new FormData();
-      formdata.append('name', this.user.name)
-      formdata.append('account', this.user.account)
-      api.fetch('register', formdata).then(res => {
-        if (res.code != 26) {
-          this.$message.error(res.msg);
-        } else if (res.code == 26) {
-          this.$message({
-            message: 'Success',
-            type: 'success'
-          });
-          this.showCard = false
-          this.load(true)
-        }
-      }).catch(err => console.error(err))
-    },
+    // 显示充值弹出层
     recharge (index, user) {
       this.user = user
-      this.card = {
-        name: 'Recharge',
-        type: 'recharge'
-      }
+      this.cardInfo('Recharge')
+    },
+    // 显示借书弹出层
+    borrow (index, user) {
+      this.user = user
+      this.user.bookid = ""
+      this.user.borrowtime = DateUtils.format(Date.now())
+      this.cardInfo('Borrow')
+    },
+    // 隐藏弹出层
+    cancel () {
+      this.user = {}
+      this.bookname = ''
+      this.showCard = false
+    },
+    // 注册新用户
+    onSubmit () {
+      Conn.register({
+        name: this.user.name,
+        account: this.user.account
+      }).then(res => {
+        res.type ? this.success(1) : this.error(res.msg)
+      }).catch(err => console.error(err))
+    },
+    // 充值
+    handleRecharge () {
+      Conn.recharge({
+        uid: this.user.uid,
+        account: this.user.recharge
+      }).then(res => {
+        res.type ? this.success(1) : this.error(res.msg)
+      }).catch(err => console.error(err))
+    },
+    // 删除用户
+    handleDelete (index, user) {
+      Conn.deleteUser({
+        uid: user.uid
+      }).then(res => {
+        res.type ? this.success(1) : this.error(res.msg)
+      })
+    },
+    // 借书
+    handleBorrow () {
+      Conn.borrowBook(this.user).then(res => {
+        res.type ? this.success(1) : this.error(res.msg)
+      }).catch(err => console.error(err))
+    },
+    // 操作成功
+    success (reload = false) {
+      this.$message({
+        message: 'Success',
+        type: 'success'
+      });
+      this.showCard = false
+      reload && this.load(true)
+    },
+    // 操作失败
+    error (msg) {
+      this.$message.error(msg);
+    },
+    // 弹出层信息
+    cardInfo (name) {
+      this.card = name
       this.showCard = true
     },
-    handleRecharge () {
-      let formdata = new FormData();
-      formdata.append('uid', this.user.uid)
-      formdata.append('account', this.user.recharge)
-      api.fetch('recharge', formdata).then(res => {
-        console.log(res)
-        if (res.code != 26) {
-          this.$message.error(res.msg);
-        } else if (res.code == 26) {
-          this.$message({
-            message: 'Success',
-            type: 'success'
-          });
-          this.showCard = false
-          this.load(true)
-        }
-        
-      })
-    },
-    handleDelete (index, user) {
-      let formdata = new FormData();
-      formdata.append('uid', user.uid)
-      api.fetch('deleteUser', formdata).then(res => {
-        console.log(res)
-        if (res.code != 26) {
-          this.$message.error(res.msg);
-        } else if (res.code == 26) {
-          this.$message({
-            message: 'Success',
-            type: 'success'
-          });
-          this.showCard = false
-          this.load(true)
-        }
-      })
-    }
   }
 }
 </script>

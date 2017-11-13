@@ -18,12 +18,18 @@
   				<router-link :to="{ path: '/admin/books' }">BookList</router-link>
   			</el-menu-item>
         <el-menu-item index="4">
+  				<router-link :to="{ path: '/admin/booking' }">Bor/Res List</router-link>
+  			</el-menu-item>
+  			<el-menu-item index="5">
+  				<router-link :to="{ path: '/admin/history' }">Bor/Res History</router-link>
+  			</el-menu-item>
+        <el-menu-item index="6">
   				<router-link :to="{ path: '/admin/add-books-from-douban' }">DouBan</router-link>
   			</el-menu-item>
-  			<el-menu-item index="5" v-if="isLogin">
+  			<el-menu-item index="7" v-if="isLogin">
   				<a @click="dialogVisible = true">Sign out</a>
   			</el-menu-item>
-        <el-menu-item index="6" style="float: right">
+        <el-menu-item index="8" style="float: right">
   				<router-link :to="{ path: '/books' }">Back to Home</router-link>
   			</el-menu-item>
   		</el-menu>
@@ -46,6 +52,7 @@
 
 <script>
 import api from '@/api'
+import * as Conn from '../utils/connection'
 
 export default {
   name: 'admin-dashboard',
@@ -59,17 +66,57 @@ export default {
   },
 
   mounted () {
-    if (!this.isLoginf()) return
-    console.log(sessionStorage.getItem('uname'));
-    if (sessionStorage.getItem('login'))  {
+    if (!sessionStorage.getItem('admin') && this.$route.path !== '/admin/login') {
+      this.$message.error('Please sign in first!');
+      return setTimeout(() => {
+        this.$router.push({ path: '/admin/login' })
+      }, 2000)
+    } else if (sessionStorage.getItem('admin')) {
       this.isLogin = true
-      this.$store.state.user = sessionStorage.getItem('uname')
     }
+    Conn.allBook().then(res => {
+      if (res.type) {
+        res.msg.forEach(item => {
+          this.$store.state.everyBook[item.bookid] = item
+          if (this.$store.state.books.hasOwnProperty(item.isbn)) {
+            this.$store.state.books[item.isbn].push(item.bookid)
+          } else {
+            this.$store.state.books[item.isbn] = []
+            this.$store.state.books[item.isbn].push(item.bookid)
+          }
+        });
+      } else {
+        this.$message.error(res.msg)
+      }
+      if (!this.$store.state.lists.hasOwnProperty('books')) {
+        this.$store.dispatch('FETCH_LISTS', {
+          model: 'getBook'
+        }).then(() => {
+          let books = this.$store.state.lists['books']
+          books.forEach(item => {
+            item.allbook = []
+            console.log(this.$store.state.books[item.isbn])
+            this.$store.state.books[item.isbn].forEach(id => {
+              item.allbook.push(this.$store.state.everyBook[id])
+            })
+          })
+        })
+      } else {
+        this.$store.state.lists['books'].forEach(item => {
+          
+          if (item.hasOwnProperty('allbook')) {
+            this.$store.state.books[item.isbn].forEach(id => {
+              item.allbook.push(this.$store.state.everyBook[id])
+            })
+          }
+        })
+      }
+    }).catch(err => console.error(err))
   },
 
   methods: {
     logout () {
-      sessionStorage.removeItem('login')
+      sessionStorage.removeItem('admin')
       this.dialogVisible = this.isLogin = false
       this.$router.push({ path: '/admin/login' })
     },
@@ -79,17 +126,6 @@ export default {
     // 登录钩子
     login () {
       this.isLogin = true
-    },
-    // 验证是否登录
-    isLoginf () {
-      if (!sessionStorage.getItem('login')) {
-        this.$message.error('Please sign in first!');
-        setTimeout(() => {
-          this.$router.push({ path: '/admin/login' })
-        }, 2000)
-        return false
-      }
-      return true
     },
   },
 }

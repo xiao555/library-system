@@ -15,27 +15,22 @@
         <el-row style="margin: 0 20px 0 0;float: right">
         <template v-if="isLogin">
   				<el-submenu index="2">
-  					<template slot="title">{{ user }}</template>
-  					<el-menu-item index="2-1">
-  						<router-link :to="{ path: '/user/' + user }">Your profile</router-link>
-  					</el-menu-item>
-  					<el-menu-item index="2-2">
-  						<router-link :to="{ path: '/borrows/' + user }">Your borrow</router-link>
-  					</el-menu-item>
-  					<el-menu-item index="2-3">
-  						<a @click="logout()">Sign out</a>
-  					</el-menu-item>
+  					<template slot="title">{{ user.name }}</template>
+  					<router-link :to="{ path: '/user/' + user.name }">
+              <el-menu-item index="2-1">Your profile</el-menu-item>
+            </router-link>
+  					<router-link :to="{ path: '/borrows/' + user.name}">
+  					  <el-menu-item index="2-2">Your borrow</el-menu-item>
+            </router-link>
+  					<a @click="logout()">
+  					  <el-menu-item index="2-3">Sign out</el-menu-item>
+            </a>
   				</el-submenu>
   			</template>
         <template v-else>
           <router-link :to = "{ path: '/login' }">
     				<el-menu-item index="3">
     					Sign in
-    				</el-menu-item>
-          </router-link>
-          <router-link :to = "{ path: '/register' }">
-            <el-menu-item index="4">
-    					Sign up
     				</el-menu-item>
           </router-link>
   			</template>
@@ -61,6 +56,7 @@
 
 <script>
 import Footer from '../components/Footer.vue'
+import * as Conn from '../utils/connection'
 
 export default {
   name: 'index',
@@ -84,17 +80,35 @@ export default {
   },
 
   mounted () {
-    console.log(sessionStorage.getItem('uname'));
-    if (sessionStorage.getItem('login'))  {
+    if (sessionStorage.getItem('uid') && !this.user.hasOwnProperty('uid'))  {
       this.isLogin = true
-      this.$store.state.user = sessionStorage.getItem('uname')
+      Conn.getUserInfo({
+        uid: sessionStorage.getItem('uid')
+      }).then(res => {
+        res.type ? this.$store.state.user = res.msg : this.error(res.msg)
+      }).catch(err => console.error(err))
     }
+    Conn.allBook().then(res => {
+      if (res.type) {
+        res.msg.forEach(item => {
+          this.$store.state.everyBook[item.bookid] = item
+          if (this.$store.state.books.hasOwnProperty(item.isbn)) {
+            this.$store.state.books[item.isbn].push(item.bookid)
+          } else {
+            this.$store.state.books[item.isbn] = []
+            this.$store.state.books[item.isbn].push(item.bookid)
+          }
+        });
+      } else {
+        this.$message.error(res.msg)
+      }
+    }).catch(err => console.error(err))
   },
 
   methods: {
     logout () {
-      sessionStorage.removeItem('login')
-      this.$store.state.user = ''
+      sessionStorage.removeItem('uid')
+      this.$store.state.user = {}
       this.dialogVisible = this.isLogin = false
       this.$router.push({ path: '/login' })
     },
@@ -118,6 +132,6 @@ a
 
 main
   margin 0 auto
-  width 90%
+  padding 0 20px
 
 </style>

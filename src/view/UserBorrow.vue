@@ -1,6 +1,6 @@
 <template lang="html">
   <div class="container">
-    <h2>Hello, {{ user }}</h2>
+    <h2>Hello, {{ user.name }}</h2>
     <div class="content">
       <h4>Your borrows</h4>
       <el-table
@@ -9,6 +9,10 @@
        style="width: 100%"
        max-height="400">
        <el-table-column
+         prop="bookid"
+         label="BookID">
+       </el-table-column>
+       <el-table-column
          prop="name"
          label="Name">
          <template slot-scope="scope">
@@ -16,23 +20,39 @@
          </template>
        </el-table-column>
        <el-table-column
-         prop="type"
+         prop="recordType"
          label="Type">
+       </el-table-column>
+       <el-table-column
+         prop="location"
+         label="Location">
        </el-table-column>
        <el-table-column
          prop="borrowtime"
          label="Borrow Time">
-       </el-table-column>
-       <el-table-column
-         prop="keeptime"
-         label="Return Time">
+         <template slot-scope="scope">
+           {{ scope.row.hasOwnProperty('borrowtime') ? scope.row.borrowtime : scope.row.reservetime}}
+         </template>
        </el-table-column>
        <el-table-column
          prop="status"
          label="Status">
          <template slot-scope="scope">
-          <span v-if="scope.row.status == 'return'" style="color: #13ce66; font-weight: bold">{{ scope.row.status }}ed</span>
+          <span v-if="scope.row.status == 'returned' || scope.row.status == 'taked'" style="color: #13ce66; font-weight: bold">{{ scope.row.status }}</span>
           <span v-else style="color: #f7ba2a; font-weight: bold">{{ scope.row.status }}</span>
+         </template>
+       </el-table-column>
+       <el-table-column
+         prop="status"
+         label="Action">
+         <template slot-scope="scope">
+          <el-button 
+            v-if="scope.row.status == 'untake'" 
+            size="mini"
+            type="danger"
+            @click="cancelReserve(scope.row)">
+            cancel
+          </el-button>
          </template>
        </el-table-column>
      </el-table>
@@ -42,6 +62,7 @@
 
 <script>
 import api from '@/api'
+import * as Conn from '../utils/connection'
 
 export default {
 
@@ -64,23 +85,25 @@ export default {
   methods: {
     load () {
       this.$bar.start()
-      let data = new FormData()
-      data.append('uid', sessionStorage.getItem('uid'))
-      api.fetch('myBookInfo', data).then(res => {
-        if (res.code != 22) {
-          this.$bar.finish()
-          let message
-          switch(res.code) {
-            case 21:
-              message = 'Query failed, please reload.'
-              break
-          }
-          this.$message.error(message);
-        } else if (res.code == 22) {
-          this.borrows = res.data
-        }
+      Conn.userBookInfo({
+        uid: sessionStorage.getItem('uid')
+      }).then(res => {
+        this.$bar.finish()
+        res.type ? this.borrows = res.msg : this.$message.error(res.msg)
       }).catch(err => console.error(err))
     },
+    cancelReserve (item) {
+      Conn.cancelReserve({
+        bookid: item.bookid,
+        uid: sessionStorage.getItem('uid')
+      }).then(res => {
+        res.type ? this.success() : this.$message.error(res.msg)
+      }).catch(err => console.error(err))
+    },
+    success () {
+      this.$message.success('Success')
+      this.load()
+    }
   }
 }
 </script>

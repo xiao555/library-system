@@ -14,6 +14,28 @@
 			stripe
       style="width: 100%"
       max-height="500">
+      <el-table-column type="expand">
+        <template slot-scope="scope">
+          <el-table
+            :data="scope.row.allbook"
+            stripe
+            style="width: 100%">
+            <el-table-column
+              label="BookID"
+              prop="bookid">
+            </el-table-column>
+            <el-table-column
+              label="Status"
+              prop="status">
+              <template slot-scope="scope">
+                {{ scope.row.status == '00' ? 'borrowed' :
+                   scope.row.status == '01' ? 'reserved' :
+                                          'available'}}
+              </template>
+            </el-table-column>
+          </el-table>
+        </template>
+      </el-table-column>
       <el-table-column
         label="ISBN"
         prop="isbn">
@@ -155,10 +177,13 @@
           let books = this.$store.state.lists['books']
 					let reg = /^IMG\((\S+)\)/g
 					books.forEach(item => {
-						if(reg.test(item.info)) {
-              console.log(reg.exec(item.info))
-              item.photo = reg.exec(item.info)[1]
-						}
+            item.allbook = []
+            console.log(this.$store.state.books[item.isbn])
+            if (this.$store.state.books[item.isbn]) {
+              this.$store.state.books[item.isbn].forEach(id => {
+                item.allbook.push(this.$store.state.everyBook[id])
+              })
+            }
 					})
 					this.books = books
         })
