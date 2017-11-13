@@ -9,6 +9,11 @@
 
 <script>
 export default {
+  mounted () {
+    setTimeout(() => {
+      this.$router.push({ path: this.$route.path.replace('/', '/books') })
+    }, 2000)
+  }
 }
 </script>
 

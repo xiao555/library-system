@@ -10,6 +10,7 @@
 			</el-col>
 		</el-row>
     <el-table
+      v-loading="loading" element-loading-text="loding..."
       :data="result"
 			stripe
       style="width: 100%"
@@ -127,6 +128,7 @@
 <script>
   import api from '@/api'
   import { imgUrl } from '../../config'
+  import * as Conn from '../utils/connection'
 
 	export default {
 		name: 'adminBooks',
@@ -146,7 +148,8 @@
         card: {
           name: '',
           type: ''
-        }
+        },
+        loading: false
 			}
 		},
 
@@ -170,24 +173,41 @@
 				if (!reload && this.$store.state.lists.hasOwnProperty('books')) {
 					return this.books = this.$store.state.lists['books']
 				}
-				this.$bar.start()
-        this.$store.dispatch('FETCH_LISTS', {
-          model: 'getBook'
-        }).then(() => {
-          let books = this.$store.state.lists['books']
-					let reg = /^IMG\((\S+)\)/g
-					books.forEach(item => {
-            item.allbook = []
-            console.log(this.$store.state.books[item.isbn])
-            if (this.$store.state.books[item.isbn]) {
+        
+        if (reload || !this.$store.state.lists.hasOwnProperty('books'))
+        this.$bar.start()
+        this.loading = true
+        Conn.allBook().then(res => {
+          if (res.type) {
+            res.msg.forEach(item => {
+              this.$store.state.everyBook[item.bookid] = item
+              if (this.$store.state.books.hasOwnProperty(item.isbn)) {
+                this.$store.state.books[item.isbn].push(item.bookid)
+              } else {
+                this.$store.state.books[item.isbn] = []
+                this.$store.state.books[item.isbn].push(item.bookid)
+              }
+            });
+          } else {
+            this.$message.error(res.msg)
+          }
+          this.$store.dispatch('FETCH_LISTS', {
+            model: 'getBook'
+          }).then(() => {
+            let books = this.$store.state.lists['books']
+            books.forEach(item => {
+              item.allbook = []
+              console.log(this.$store.state.books[item.isbn])
               this.$store.state.books[item.isbn].forEach(id => {
                 item.allbook.push(this.$store.state.everyBook[id])
               })
-            }
-					})
-					this.books = books
-        })
-				this.$bar.finish()
+            })
+            this.books = books
+            this.$bar.finish()
+            this.loading = false
+          })
+        }).catch(err => console.error(err))
+				
       },
       handleEdit (index, row) {
         this.showCard = true

@@ -1,17 +1,30 @@
 <template lang="html">
   <div class="container">
-    <h2>Hello, {{ user.name }}</h2>
+    <h2>Hi, {{ user.name }}</h2>
     <div class="content">
-      <h4>Your Information</h4>
-      <p>UID: {{ user.uid }} / Account: {{ user.account }} / Borrowing: {{ user.numofbook }}</p>
-    </div>
-    <div class="content">
-      <h4>Your Borrow/Reserve</h4>
+      <h4>Your History</h4>
       <el-table
        :data="borrows"
        stripe
        style="width: 100%"
-       height="300">
+       :default-sort = "{prop: 'returntime', order: 'ascending'}"
+       height="400">
+       <el-table-column
+         prop="id"
+         sortable
+         label="ID"
+         width="80">
+       </el-table-column>
+       <el-table-column
+        prop="recordType"
+        label="Type"
+        sortable
+        width="90">
+        <template slot-scope="scope">
+          <el-tag v-if="scope.row.recordType == 'borrow'" color="#784a97" style="font-weight: bold">{{ scope.row.recordType }}</el-tag>
+          <el-tag v-else color="#7cd5b1" style="font-weight: bold">{{ scope.row.recordType }}</el-tag>
+        </template>
+      </el-table-column>
        <el-table-column
          prop="bookid"
          label="BookID">
@@ -20,29 +33,29 @@
          prop="name"
          label="Name">
          <template slot-scope="scope">
-          <h6><i>{{ scope.row.name }}</i></h6>
+          <h6><i>{{ scope.row.bookname }}</i></h6>
          </template>
        </el-table-column>
        <el-table-column
-         prop="recordType"
-         label="Type">
-       </el-table-column>
-       <el-table-column
-         prop="location"
-         label="Location">
-       </el-table-column>
-       <el-table-column
          prop="borrowtime"
-         label="Borrow Time">
+         label="Bor/Res Time"
+         sortable>
          <template slot-scope="scope">
-           {{ scope.row.hasOwnProperty('borrowtime') ? scope.row.borrowtime : scope.row.reservetime}}
+           {{ scope.row.borrowtime || scope.row.reservetime }}
+         </template>
+       </el-table-column>
+       <el-table-column
+        prop="returntime"
+        label="Ret/Tak Time"
+        sortable>
+          <template slot-scope="scope">
+           {{ scope.row.returntime || scope.row.taketime }}
          </template>
        </el-table-column>
        <el-table-column
         label="Expense">
         <template slot-scope="scope">
-          ${{ scope.row.hasOwnProperty('borrowexpense') ? scope.row.borrowexpense : 
-              scope.row.hasOwnProperty('reserveexpense') ? scope.row.reserveexpense : scope.row.expense}}
+          ${{ scope.row.expense || 10}}
         </template>
       </el-table-column>
        <el-table-column
@@ -51,19 +64,6 @@
          <template slot-scope="scope">
           <span v-if="scope.row.status == 'returned' || scope.row.status == 'taked'" style="color: #13ce66; font-weight: bold">{{ scope.row.status }}</span>
           <span v-else style="color: #f7ba2a; font-weight: bold">{{ scope.row.status }}</span>
-         </template>
-       </el-table-column>
-       <el-table-column
-         prop="status"
-         label="Action">
-         <template slot-scope="scope">
-          <el-button 
-            v-if="scope.row.status == 'untake'" 
-            size="mini"
-            type="danger"
-            @click="cancelReserve(scope.row)">
-            cancel
-          </el-button>
          </template>
        </el-table-column>
      </el-table>
@@ -79,7 +79,6 @@ export default {
 
   data () {
     return {
-      info: {},
       borrows: []
     }
   },
@@ -97,7 +96,7 @@ export default {
   methods: {
     load () {
       this.$bar.start()
-      Conn.userBookInfo({
+      Conn.userHistory({
         uid: sessionStorage.getItem('uid')
       }).then(res => {
         this.$bar.finish()
@@ -106,22 +105,9 @@ export default {
     },
     handleInfo (info) {
       info.forEach(item => {
-        if (!item.hasOwnProperty('bookname')) {
-          if (this.$store.state.everyBook[item.bookid]) {
-            item.name = this.$store.state.everyBook[item.bookid].name
-            item.location = this.$store.state.everyBook[item.bookid].location
-            this.borrows.push(item)
-          } else {
-            Conn.everyBook({
-              bookid: item.bookid
-            }).then(res => {
-              res.type ? (item.name = res.msg.name,item.location = res.msg.location,this.borrows.push(item)) : ''
-            }).catch(err => console.error(err))
-          }
-        } else {
-          this.borrows.push(item)
-        }
-      })
+        item.id = item.returnid || item.reservehistoryid
+      });
+      this.borrows = info
     },
     cancelReserve (item) {
       Conn.cancelReserve({

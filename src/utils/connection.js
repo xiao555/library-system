@@ -297,16 +297,10 @@ export function userHistory (data) {
   sequence = sequence.then(() => {
     return userBookHistory(data).then(res => {
       res.type && res.msg.forEach(item => {
-        return everyBook({
-          bookid: item.bookid
-        }).then(book => {
-          info.push({
-            recordType: 'book',
-            name: book.type ? book.msg.name : 'Not Found',
-            location: book.type ? book.msg.location : 'Not Found',
-            status: 'taked',
-            ...item
-          })
+        info.push({
+          recordType: 'reserve',
+          status: 'taked',
+          ...item
         })
       });
     }).catch(err => Promise.reject(err)) // api

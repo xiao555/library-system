@@ -3,7 +3,7 @@
 		<el-row>
 			<el-col :xs="24" :sm="6" class="aside">
 				<el-row>Cart</el-row>
-				<el-row>Your can book {{ availableBook }} books</el-row>
+				<el-row v-if="user.hasOwnProperty('uid')">Your can book {{ availableBook }} books</el-row>
 				<el-row>
 					<el-col style = "margin-bottom: 10px;" :span = "24" v-for = "item in carts" :key = "item.bookid">
 						<Cart
@@ -16,7 +16,7 @@
 					style = "width: 100%;"
 					type = "success"
 					@click = "order"
-					:disabled="availableBook == 0 && carts.length == 0"
+					:disabled="!user.uid || (availableBook == 0 && carts.length == 0)"
 				>Booking</el-button>
 			</el-col>
 			<el-col :xs="24" :sm="18">

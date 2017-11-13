@@ -10,10 +10,17 @@
      :data="result"
      stripe
      style="width: 100%"
+     :default-sort = "{prop: 'returntime', order: 'ascending'}"
      max-height="500">
+      <el-table-column
+        prop="id"
+        sortable
+        label="ID">
+      </el-table-column>
       <el-table-column
         prop="recordType"
         label="Type"
+        sortable
         width="90">
         <template slot-scope="scope">
           <el-tag v-if="scope.row.recordType == 'borrow'" color="#784a97" style="font-weight: bold">{{ scope.row.recordType }}</el-tag>
@@ -23,6 +30,7 @@
       <el-table-column
         prop="uid"
         label="UID"
+        sortable
         width="65">
       </el-table-column>
       <el-table-column
@@ -42,14 +50,19 @@
       </el-table-column>
       <el-table-column
         prop="borrowtime"
+        sortable
         label="Bor/Res Time">
         <template slot-scope="scope">
-          {{ scope.row.borrowtime }}
+          {{ scope.row.borrowtime || scope.row.reservetime }}
         </template>
       </el-table-column>
       <el-table-column
         prop="returntime"
+        sortable
         label="Return Time">
+        <template slot-scope="scope">
+          {{ scope.row.returntime || scope.row.taketime }}
+        </template>
       </el-table-column>
       <el-table-column
         label="Expense">
@@ -90,7 +103,6 @@ export default {
       if (this.query == '') return this.borrows
       return this.borrows.filter(item => {
         return item.user.toLowerCase().indexOf(this.query.toLowerCase()) !== -1 ||
-          item.name.toLowerCase().indexOf(this.query.toLowerCase()) !== -1 ||
           item.uid.indexOf(this.query) !== -1 ||
           item.bookid.indexOf(this.query) !== -1
       })
@@ -133,6 +145,7 @@ export default {
               record['user'] = item.name
               record['uid'] = item.uid
               record['account'] = item.account
+              record.id = record.returnid || record.reservehistoryid
               this.borrows.push(record)
             })
         }).catch(err => console.error(err))

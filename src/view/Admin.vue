@@ -26,9 +26,6 @@
         <el-menu-item index="6">
   				<router-link :to="{ path: '/admin/add-books-from-douban' }">DouBan</router-link>
   			</el-menu-item>
-  			<el-menu-item index="7" v-if="isLogin">
-  				<a @click="dialogVisible = true">Sign out</a>
-  			</el-menu-item>
         <el-menu-item index="8" style="float: right">
   				<router-link :to="{ path: '/books' }">Back to Home</router-link>
   			</el-menu-item>
@@ -38,13 +35,6 @@
       <transition name="fade" mode="out-in">
         <router-view v-on:login="login" v-on:logout="logout"></router-view>
       </transition>
-  		<el-dialog title="Alert" v-model="dialogVisible" size="tiny">
-  			<span>Are you sure?</span>
-  			<span slot="footer" class="dialog-footer">
-  				<el-button @click="cancel()">Cancel</el-button>
-  				<el-button type="primary" @click="logout()">Yes</el-button>
-  			</span>
-  		</el-dialog>
 		</main>
 
 	</div>
@@ -74,55 +64,9 @@ export default {
     } else if (sessionStorage.getItem('admin')) {
       this.isLogin = true
     }
-    Conn.allBook().then(res => {
-      if (res.type) {
-        res.msg.forEach(item => {
-          this.$store.state.everyBook[item.bookid] = item
-          if (this.$store.state.books.hasOwnProperty(item.isbn)) {
-            this.$store.state.books[item.isbn].push(item.bookid)
-          } else {
-            this.$store.state.books[item.isbn] = []
-            this.$store.state.books[item.isbn].push(item.bookid)
-          }
-        });
-      } else {
-        this.$message.error(res.msg)
-      }
-      if (!this.$store.state.lists.hasOwnProperty('books')) {
-        this.$store.dispatch('FETCH_LISTS', {
-          model: 'getBook'
-        }).then(() => {
-          let books = this.$store.state.lists['books']
-          books.forEach(item => {
-            item.allbook = []
-            console.log(this.$store.state.books[item.isbn])
-            this.$store.state.books[item.isbn].forEach(id => {
-              item.allbook.push(this.$store.state.everyBook[id])
-            })
-          })
-        })
-      } else {
-        this.$store.state.lists['books'].forEach(item => {
-          
-          if (item.hasOwnProperty('allbook')) {
-            this.$store.state.books[item.isbn].forEach(id => {
-              item.allbook.push(this.$store.state.everyBook[id])
-            })
-          }
-        })
-      }
-    }).catch(err => console.error(err))
   },
 
   methods: {
-    logout () {
-      sessionStorage.removeItem('admin')
-      this.dialogVisible = this.isLogin = false
-      this.$router.push({ path: '/admin/login' })
-    },
-    cancel () {
-      this.dialogVisible = false
-    },
     // 登录钩子
     login () {
       this.isLogin = true

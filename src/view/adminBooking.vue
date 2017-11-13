@@ -13,6 +13,7 @@
      :data="result"
      stripe
      style="width: 100%"
+     :default-sort = "{prop: 'borrowtime', order: 'ascending'}"
      max-height="500">
       <el-table-column
         prop="recordType"
@@ -36,16 +37,17 @@
         prop="bookid"
         label="BID">
       </el-table-column>
-      <!-- <el-table-column
+      <el-table-column
         prop="name"
         label="Book">
         <template slot-scope="scope">
           <h6><i>{{ scope.row.name ? scope.row.name : scope.row.bookname }}</i></h6>
         </template>
-      </el-table-column> -->
+      </el-table-column>
       <el-table-column
         prop="borrowtime"
-        label="Bor/Res Time">
+        label="Bor/Res Time"
+        sortable>
         <template slot-scope="scope">
           {{ scope.row.hasOwnProperty('borrowtime') ? scope.row.borrowtime : scope.row.reservetime}}
         </template>
@@ -67,7 +69,7 @@
       <el-table-column
         fixed="right"
         label="Action"
-        width="200">
+        width="150">
         <template slot-scope="scope">
           <el-button
             v-if="scope.row.status == 'unreturn'"
@@ -205,7 +207,20 @@ export default {
             record['user'] = item.name
             record['uid'] = item.uid
             record['account'] = item.account
-            this.borrows.push(record)
+            if (record.name || record.bookname) {
+              this.borrows.push(record)
+            } else {
+              if (this.$store.state.everyBook[record.bookid]) {
+                record.name = this.$store.state.everyBook[record.bookid].name
+                this.borrows.push(record)
+              } else {
+                Conn.everyBook({
+                  bookid: record.bookid
+                }).then(res => {
+                  res.type ? (record.name = res.msg.name,this.borrows.push(record)) : ''
+                }).catch(err => console.error(err))
+              }
+            }
           })
           console.log(this.borrows.length)
         }).catch(err => console.error(err))

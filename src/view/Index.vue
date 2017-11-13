@@ -19,8 +19,8 @@
   					<router-link :to="{ path: '/user/' + user.name }">
               <el-menu-item index="2-1">Your profile</el-menu-item>
             </router-link>
-  					<router-link :to="{ path: '/borrows/' + user.name}">
-  					  <el-menu-item index="2-2">Your borrow</el-menu-item>
+  					<router-link :to="{ path: '/history/' + user.name}">
+  					  <el-menu-item index="2-2">Your history</el-menu-item>
             </router-link>
   					<a @click="logout()">
   					  <el-menu-item index="2-3">Sign out</el-menu-item>

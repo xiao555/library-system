@@ -8,7 +8,7 @@ const userLogin = () => import('@/view/UserLogin.vue')
 const Index = () => import('@/view/Index.vue')
 // const Register = () => import('@/view/Register.vue')
 const IndexBooks = () => import('../view/IndexBooks.vue')
-const UserBorrow = () => import('../view/UserBorrow.vue')
+const UserHistory = () => import('../view/UserHistory.vue')
 const UserInfo = () => import('../view/UserInfo.vue')
 const BookInfo = () => import('../view/BookInfo.vue')
 
@@ -55,9 +55,9 @@ export function createRouter () {
           component: UserInfo
         },
         {
-          path: 'borrows/:id',
-          name: 'borrows',
-          component: UserBorrow
+          path: 'history/:id',
+          name: 'history',
+          component: UserHistory
         }
       ]},
       { path: '/admin', component: Admin, children: [
