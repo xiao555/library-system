@@ -67,7 +67,7 @@
       <el-table-column
         label="Expense">
         <template slot-scope="scope">
-          ${{ scope.row.expense}}
+          ${{ scope.row.expense || 10}}
         </template>
       </el-table-column>
       <el-table-column

@@ -13,6 +13,16 @@
        style="width: 100%"
        height="300">
        <el-table-column
+        prop="recordType"
+        label="Type"
+        sortable
+        width="90">
+        <template slot-scope="scope">
+          <el-tag v-if="scope.row.recordType == 'borrow'" color="#784a97" style="font-weight: bold">{{ scope.row.recordType }}</el-tag>
+          <el-tag v-else color="#7cd5b1" style="font-weight: bold">{{ scope.row.recordType }}</el-tag>
+        </template>
+      </el-table-column>
+       <el-table-column
          prop="bookid"
          label="BookID">
        </el-table-column>
@@ -22,10 +32,6 @@
          <template slot-scope="scope">
           <h6><i>{{ scope.row.name }}</i></h6>
          </template>
-       </el-table-column>
-       <el-table-column
-         prop="recordType"
-         label="Type">
        </el-table-column>
        <el-table-column
          prop="location"
@@ -105,6 +111,7 @@ export default {
       }).catch(err => console.error(err))
     },
     handleInfo (info) {
+      this.borrows = []
       info.forEach(item => {
         if (!item.hasOwnProperty('bookname')) {
           if (this.$store.state.everyBook[item.bookid]) {
