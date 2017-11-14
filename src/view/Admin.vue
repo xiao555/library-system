@@ -8,32 +8,46 @@
     </div>
     <header>
       <el-menu theme="dark" class="el-menu-demo" mode="horizontal">
+        <router-link :to="{ path: '/admin/booking' }">
         <el-menu-item index="1">
-  				<router-link :to="{ path: '/admin/booking' }">Admin</router-link>
+  				Admin
   			</el-menu-item>
+        </router-link>
+        <router-link :to="{ path: '/admin/users' }">
         <el-menu-item index="2">
-  				<router-link :to="{ path: '/admin/users' }">UserList</router-link>
+  				UserList
   			</el-menu-item>
+        </router-link>
+        <router-link :to="{ path: '/admin/books' }">
   			<el-menu-item index="3">
-  				<router-link :to="{ path: '/admin/books' }">BookList</router-link>
+  				BookList
   			</el-menu-item>
+        </router-link>
+        <router-link :to="{ path: '/admin/booking' }">
         <el-menu-item index="4">
-  				<router-link :to="{ path: '/admin/booking' }">Bor/Res List</router-link>
+  				Bor/Res List
   			</el-menu-item>
+        </router-link>
+        <router-link :to="{ path: '/admin/history' }">
   			<el-menu-item index="5">
-  				<router-link :to="{ path: '/admin/history' }">Bor/Res History</router-link>
+  				Bor/Res History
   			</el-menu-item>
+        </router-link>
+        <router-link :to="{ path: '/admin/add-books-from-douban' }">
         <el-menu-item index="6">
-  				<router-link :to="{ path: '/admin/add-books-from-douban' }">DouBan</router-link>
+  				DouBan
   			</el-menu-item>
+        </router-link>
+        <router-link :to="{ path: '/books' }">
         <el-menu-item index="8" style="float: right">
-  				<router-link :to="{ path: '/books' }">Back to Home</router-link>
+  				Back to Home
   			</el-menu-item>
+        </router-link>
   		</el-menu>
     </header>
 		<main>
       <transition name="fade" mode="out-in">
-        <router-view v-on:login="login" v-on:logout="logout"></router-view>
+        <router-view v-on:login="login"></router-view>
       </transition>
 		</main>
 

@@ -14,6 +14,7 @@
      stripe
      style="width: 100%"
      :default-sort = "{prop: 'borrowtime', order: 'ascending'}"
+     empty-text="No Data"
      max-height="500">
       <el-table-column
         prop="recordType"
@@ -26,8 +27,7 @@
       </el-table-column>
       <el-table-column
         prop="uid"
-        label="UID"
-        width="65">
+        label="UID">
       </el-table-column>
       <el-table-column
         prop="user"
@@ -88,7 +88,7 @@
             v-if="scope.row.status == 'untake'" 
             size="mini"
             type="danger"
-            @click="cancelReserve(scope.row)">
+            @click="cancelReserveDialog(scope.row)">
             cancel
           </el-button>
         </template>
@@ -133,6 +133,13 @@
         <el-button type="primary" @click="handleReturn()">Yes</el-button>
       </span>
     </el-dialog>
+    <el-dialog title="Alert" v-model="dialog" size="tiny">
+      <p>{{ diaConf.info }}</p>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="cancelDialog">Cancel</el-button>
+        <el-button type="primary" @click="diaConf.action">Yes</el-button>
+      </span>
+    </el-dialog>
 	</div>
 </template>
 
@@ -153,6 +160,12 @@ export default {
       form: {},
       returnDialog: false,
       retBook: {},
+      dialog: false,
+      diaConf: {
+        info: '',
+        action: {},
+        bookid: '',
+      }
     }
   },
 
@@ -175,6 +188,12 @@ export default {
   },
 
   methods: {
+    cancelReserveDialog (item) {
+      this.dialog = true,
+      this.diaConf.info = `Are you sure to cancel ${item.uid}'s reserve?`
+      this.diaConf.action = this.cancelReserve
+      this.diaConf.bookid = item.bookid
+    },
     load () {
       this.$bar.start()
       if (this.$store.state.lists.hasOwnProperty('users')) {
@@ -247,6 +266,7 @@ export default {
     cancelDialog () {
       this.returnDialog = false
       this.retBook = {}
+      this.dialog = false
     },
     handleReturn () {
       Conn.returnBook({
@@ -282,6 +302,7 @@ export default {
     },
     success () {
       this.cancel()
+      this.cancelDialog()
       this.load()
       this.$message({
         message: 'Success',
@@ -289,9 +310,9 @@ export default {
         duration: 1000
       });
     },
-    cancelReserve (item) {
+    cancelReserve () {
       Conn.deleteReservation({
-        bookid: item.bookid,
+        bookid: this.diaConf.bookid
       }).then(res => {
         res.type ? this.success() : this.$message.error(res.msg)
       }).catch(err => console.error(err))

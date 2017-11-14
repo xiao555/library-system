@@ -13,18 +13,20 @@
      :data="result"
      stripe
      style="width: 100%"
+     :default-sort = "{prop: 'uid', order: 'ascending'}"
+     empty-text="No Data"
      max-height="500">
      <el-table-column
        prop="uid"
        label="ID">
      </el-table-column>
-     <el-table-column
+     <!-- <el-table-column
        prop="name"
-       label="Name">
+       label="Password">
        <template slot-scope="scope">
         <h6><i>{{ scope.row.name }}</i></h6>
        </template>
-     </el-table-column>
+     </el-table-column> -->
      <!-- <el-table-column
        prop="passwd"
        label="Passwd">
@@ -50,8 +52,11 @@
           @click="recharge(scope.$index, scope.row)">Recharge</el-button>
         <el-button
           size="mini"
+          @click="alter(scope.row)">Reset Password</el-button>
+        <el-button
+          size="mini"
           type="danger"
-          @click="handleDelete(scope.$index, scope.row)">Delete</el-button>
+          @click="Delete(scope.row)">Delete</el-button>
       </template>
     </el-table-column>
    </el-table>
@@ -65,8 +70,11 @@
          <el-button style="float: right;" size="small" type="primary" v-if="card == 'Borrow'" @click="handleBorrow()" >Confirm</el-button>
        </div>
        <el-form v-if="card == 'New User'" ref="form" :model="user" label-width="80px" name="bookinfo">
-         <el-form-item label="Name">
-           <el-input v-model="user.name"></el-input>
+         <el-form-item label="Password">
+           <el-input v-model="user.name" type="password"></el-input>
+         </el-form-item>
+         <el-form-item label="Confirm Passwd">
+           <el-input v-model="user.confirm" type="password"></el-input>
          </el-form-item>
          <el-form-item label="Account">
            <el-input v-model="user.account" type="count"></el-input>
@@ -95,7 +103,14 @@
          </el-form-item>
        </el-form>
      </div>
-   </el-card>
+    </el-card>
+    <el-dialog title="Alert" v-model="dialog" size="tiny">
+      <p>{{ diaConf.info }}</p>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="cancelDialog()">Cancel</el-button>
+        <el-button type="primary" @click="diaConf.action">Yes</el-button>
+      </span>
+    </el-dialog>
 	</div>
 </template>
 
@@ -115,7 +130,12 @@ export default {
       user: {},
       card: "",
       utils: _,
-      bookname: ''
+      bookname: '',
+      dialog: false,
+      diaConf: {
+        info: '',
+        action: {},
+      }
     }
   },
 
@@ -123,7 +143,7 @@ export default {
     result () {
       if (this.query == '') return this.users
       return this.users.reduce((pre, cur) => {
-        if (cur.name.toLowerCase().indexOf(this.query.toLowerCase()) !== -1 || cur.uid.indexOf(this.query) !== -1) pre.push(cur)
+        if (cur.uid.indexOf(this.query) !== -1) pre.push(cur)
         return pre
       }, [])
     },
@@ -144,6 +164,29 @@ export default {
   },
 
   methods: {
+    alter (user) {
+      this.dialog = true,
+      this.diaConf.info = `Are you sure to reset ${user.uid}'s password?`
+      this.diaConf.action = this.alterPasswd
+      this.user = user
+    },
+    Delete (user) {
+      this.dialog = true,
+      this.diaConf.info = `Are you sure to delete ${user.uid}?`
+      this.diaConf.action = this.handleDelete
+      this.user = user
+    },
+    cancelDialog () {
+      this.dialog = false,
+      this.user = {}
+    },
+    alterPasswd () {
+      Conn.adminAlterPasswd({
+        uid: this.user.uid
+      }).then(res => {
+        res.type ? this.success(1) : this.$message.error(res.msg)
+      })
+    },
     // 加载用户信息，reload = true 强制刷新
     load (reload = false) {
       if (!reload && this.$store.state.lists.hasOwnProperty('users')) {
@@ -196,6 +239,9 @@ export default {
     },
     // 注册新用户
     onSubmit () {
+      if (this.user.name !== this.user.confirm) {
+        return this.$message.error('The passwords entered twice are not the same')
+      }
       Conn.register({
         name: this.user.name,
         account: this.user.account
@@ -213,9 +259,9 @@ export default {
       }).catch(err => console.error(err))
     },
     // 删除用户
-    handleDelete (index, user) {
+    handleDelete () {
       Conn.deleteUser({
-        uid: user.uid
+        uid: this.user.uid
       }).then(res => {
         res.type ? this.success(1) : this.error(res.msg)
       })
@@ -232,7 +278,9 @@ export default {
         message: 'Success',
         type: 'success'
       });
+      this.user = {}
       this.showCard = false
+      this.dialog = false
       reload && this.load(true)
     },
     // 操作失败

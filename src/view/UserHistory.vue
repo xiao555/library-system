@@ -1,6 +1,6 @@
 <template lang="html">
   <div class="container">
-    <h2>Hi, {{ user.name }}</h2>
+    <h2>Hi, {{ user.uid }}</h2>
     <div class="content">
       <h4>Your History</h4>
       <el-table
@@ -8,6 +8,7 @@
        stripe
        style="width: 100%"
        :default-sort = "{prop: 'returntime', order: 'ascending'}"
+       empty-text="No Data"
        height="400">
        <el-table-column
          prop="id"

@@ -1,8 +1,11 @@
 <template>
 	<el-card class="good-item" :body-style="{ padding: '0px' }">
-		<div class="photo" style="float: left; padding: 10px;">
-			<img :src="item.photo" alt="photo">
-		</div>
+		<router-link
+				class = "goods__link"
+				:to = "{ path: '/books/' + item.isbn }"
+			>
+			<div class="photo" v-bind:style="{ backgroundImage: 'url(' + item.photo + ')' }" :data-img="item.photo"></div>
+		</router-link>
 		<div style="float: left; padding: 10px; max-width: 200px">
 			<router-link
 				class = "goods__link"
@@ -12,7 +15,7 @@
 				<p>Type: {{ item.type }}</p>
 				<p>Number: {{ item.number }}</p>
 				<el-tooltip :disabled="canBook" :content="tooltip" placement="right" effect="dark">
-					<el-button @click="canBook ? choose(item) : ''">Book</el-button>
+					<el-button @click="canBook ? choose(item) : login()">Add to Carts</el-button>
 				</el-tooltip>
 			</div>
 		</div>
@@ -36,19 +39,25 @@
 				return this.$store.state.user
 			},
 			canBook () {
-				if (new Date().getDay() == 4) {
-					this.tooltip = 'Can not reserve on Thursday'
+				if (new Date().getDay() == 0) {
+					this.tooltip = 'Can not reserve on Sunday'
 					return false
 				} else if (!sessionStorage.getItem('uid')) {
 					this.tooltip = 'Please sign in first'
 					return false
 				}
 				return true
+			},
+		},
+
+		methods: {
+			login () {
+				this.$router.push('/login')
 			}
 		}
 	}
 </script>
-<style lang="stylus">
+<style lang="stylus" scoped>
 	.goods__link {
 		text-decoration: none;
 	}
@@ -67,6 +76,13 @@
 		width 140px
 		height: 200px
 		padding 5px
-		img
-			width 100%
+		overflow hidden
+		float left
+		margin 10px
+		background-size cover
+		background-position center
+		transition all .8s cubic-bezier(0.18, 0.89, 0.32, 1.28)
+		cursor pointer
+		&:hover
+			background-size 200px
 </style>

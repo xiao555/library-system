@@ -1,9 +1,10 @@
 <template lang="html">
   <div class="container">
-    <h2>Hello, {{ user.name }}</h2>
+    <h2>Hello, {{ user.uid }}</h2>
     <div class="content">
       <h4>Your Information</h4>
-      <p>UID: {{ user.uid }} / Account: {{ user.account }} / Borrowing: {{ user.numofbook }}</p>
+      <p>Account: {{ user.account }} / Borrowing: {{ user.numofbook }}</p>
+      <el-button size="small" @click="changePasswd()">change Password</el-button>
     </div>
     <div class="content">
       <h4>Your Borrow/Reserve</h4>
@@ -11,6 +12,7 @@
        :data="borrows"
        stripe
        style="width: 100%"
+       empty-text="No Data"
        height="300">
        <el-table-column
         prop="recordType"
@@ -74,6 +76,25 @@
        </el-table-column>
      </el-table>
     </div>
+    <el-card class="card changeP" v-if="showCard">
+      <div class="container">
+        <el-form ref="form" :model="form" label-width="80px">
+          <el-form-item label="Old Password">
+            <el-input type="password" v-model="form.oldpasswd"></el-input>
+          </el-form-item>
+          <el-form-item label="New Password">
+            <el-input type="password" v-model="form.newpasswd"></el-input>
+          </el-form-item>
+          <el-form-item label="Confirm Password">
+            <el-input type="password" v-model="form.confirm"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="onSubmit">Confirm</el-button>
+            <el-button @click="cancel">Cancel</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+    </el-card>
   </div>
 </template>
 
@@ -86,7 +107,9 @@ export default {
   data () {
     return {
       info: {},
-      borrows: []
+      borrows: [],
+      showCard: false,
+      form: {}
     }
   },
 
@@ -101,8 +124,15 @@ export default {
   },
 
   methods: {
-    load () {
+    load (reload = false) {
       this.$bar.start()
+      if (reload)  {
+        Conn.getUserInfo({
+          uid: sessionStorage.getItem('uid')
+        }).then(res => {
+          res.type ? this.$store.state.user = res.msg : this.$message.error(res.msg)
+        }).catch(err => console.error(err))
+      }
       Conn.userBookInfo({
         uid: sessionStorage.getItem('uid')
       }).then(res => {
@@ -130,6 +160,33 @@ export default {
         }
       })
     },
+    changePasswd () {
+      this.showCard = true,
+      this.form = {}
+    },
+    cancel () {
+      this.showCard = false
+    },
+    onSubmit () {
+      if (this.form.newpasswd !== this.form.confirm) {
+        return this.$message.error('The passwords entered twice are not the same')
+      }
+      Conn.userLogin({
+        uid: sessionStorage.getItem('uid'),
+        uname: this.form.oldpasswd
+      }).then(res => {
+        if (res.type) {
+          Conn.alterPasswd({
+            uid: sessionStorage.getItem('uid'),
+            passwd: this.form.newpasswd
+          }).then(response => {
+            response.type ? this.success() : this.$message.error('Error')
+          })
+        } else {
+          this.$message.error('Old Password Error')
+        }
+      }).catch(err => console.error(err))
+    },
     cancelReserve (item) {
       Conn.cancelReserve({
         bookid: item.bookid,
@@ -140,11 +197,14 @@ export default {
     },
     success () {
       this.$message.success('Success')
-      this.load()
+      this.showCard = false
+      this.load(true)
     }
   }
 }
 </script>
 
-<style lang="css">
+<style lang="stylus" scope>
+.card.changeP .container
+  max-width 400px
 </style>

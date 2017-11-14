@@ -11,6 +11,7 @@
      stripe
      style="width: 100%"
      :default-sort = "{prop: 'returntime', order: 'ascending'}"
+     empty-text="No Data"
      max-height="500">
       <el-table-column
         prop="id"
@@ -30,8 +31,7 @@
       <el-table-column
         prop="uid"
         label="UID"
-        sortable
-        width="65">
+        sortable>
       </el-table-column>
       <el-table-column
         prop="user"

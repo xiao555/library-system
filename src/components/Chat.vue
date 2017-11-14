@@ -374,7 +374,7 @@ export default {
   border-radius 10px
 
 .messages
-  font-size 150%
+  font-size 100%
   height 100%
   margin 0
   overflow-y scroll

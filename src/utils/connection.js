@@ -359,3 +359,26 @@ export function deleteReservation(data) {
     }
   })
 }
+
+// 修改密码
+export function alterPasswd(data) {
+  return api.fetch('alterPasswd', formatFormData(data)).then(res => {
+    console.log(res)
+    if (res.code != 32) {
+      return cb(0, resMsg(res))
+    } else if (res.code == 32) {
+      return cb(1)
+    }
+  })
+}
+// 管理员重置密码
+export function adminAlterPasswd(data) {
+  return api.fetch('adminAlterPasswd', formatFormData(data)).then(res => {
+    console.log(res)
+    if (res.code != 32) {
+      return cb(0, resMsg(res))
+    } else if (res.code == 32) {
+      return cb(1)
+    }
+  })
+}

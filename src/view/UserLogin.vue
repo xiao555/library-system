@@ -8,8 +8,8 @@
           <input type="text" id="uid" v-model="uid" required>
         </div>
         <div class="item">
-          <label for="username">Username</label>
-          <input type="text" id="name" v-model="uname" required>
+          <label for="username">Password</label>
+          <input type="password" id="name" v-model="uname" required>
         </div>
         <div class="item">
           <input type="checkbox" id="remember" v-model="remember"><label class="checkbox" for="remember">Remeber Me</label>

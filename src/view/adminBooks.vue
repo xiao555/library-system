@@ -13,6 +13,7 @@
       v-loading="loading" element-loading-text="loding..."
       :data="result"
 			stripe
+      empty-text="No Data"
       style="width: 100%"
       max-height="500">
       <el-table-column type="expand">

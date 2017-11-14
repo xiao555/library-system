@@ -28,6 +28,9 @@ export const api = {
   reserveHistory: `${url}reservehistory.php`,
   borrowReserve: `${url}borrowafterrsv.php`,
   deleteReserve: `${url}deletereservation.php`,
+  alterPasswd: `${url}alterpasswd.php`,
+  adminAlterPasswd: `${url}adminalterpswd.php`,
+  
 }
 
 export const imgUrl = 'http://120.78.129.29/danteng/img/'
