@@ -7,6 +7,7 @@
 			</el-col>
 		</el-row>
     <el-table
+     v-loading="loading" element-loading-text="loding..."
      :data="result"
      stripe
      style="width: 100%"
@@ -28,7 +29,6 @@
         label="Reason">
       </el-table-column>
     </el-table>
-    <el-row>Tips: bookid = 0 delete all books of isbn</el-row>
 	</div>
 </template>
 
@@ -43,6 +43,7 @@ export default {
       query: '',
       borrows: [],
       users: {},
+      loading: false,
     }
   },
 
@@ -66,12 +67,26 @@ export default {
   methods: {
     load () {
       this.$bar.start()
+      this.loading = true
       Conn.deleteHistory().then(res => {
         res.type ? this.success(res.msg) : this.$message.error(res.msg)
       }).catch(err => console.error(err))
     },
     success (data) {
-      this.borrows = data
+      let reg = /^ISBN\((\S+)\)/g
+      this.borrows = []
+      data.forEach(item => {
+        if(reg.test(item.reason)) {
+          item.reason = item.reason.replace(reg, (match, p1) => {
+            item.isbn = p1
+            return ''
+          })
+        }
+        if (item.bookid !== '0') {
+          this.borrows.push(item)
+        }
+      });
+      this.loading = false
     }
   }
 }

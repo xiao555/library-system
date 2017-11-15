@@ -10,6 +10,7 @@
       </el-col>
 		</el-row>
     <el-table
+     v-loading="loading" element-loading-text="loding..."
      :data="result"
      stripe
      style="width: 100%"
@@ -135,7 +136,8 @@ export default {
       diaConf: {
         info: '',
         action: {},
-      }
+      },
+      loading: false
     }
   },
 
@@ -160,7 +162,7 @@ export default {
   },
 
   beforeMount () {
-    this.load()
+    this.load(1)
   },
 
   methods: {
@@ -189,10 +191,12 @@ export default {
     },
     // 加载用户信息，reload = true 强制刷新
     load (reload = false) {
+
       if (!reload && this.$store.state.lists.hasOwnProperty('users')) {
         return this.users = this.$store.state.lists['users']
       }
       this.$bar.start()
+      this.loading = true
       this.$store.dispatch('FETCH_LISTS', {
         model: 'getUser'
       }).then(res => {
@@ -206,6 +210,7 @@ export default {
           this.$message.error(message);
         } else if (res.code == 22) {
           this.users = this.$store.state.lists['users']
+          this.loading = false
         }
       })
     },
@@ -246,7 +251,7 @@ export default {
         name: this.user.name,
         account: this.user.account
       }).then(res => {
-        res.type ? this.success(1) : this.error(res.msg)
+        res.type ? this.success(1, res.msg.uid) : this.error(res.msg)
       }).catch(err => console.error(err))
     },
     // 充值
@@ -273,8 +278,14 @@ export default {
       }).catch(err => console.error(err))
     },
     // 操作成功
-    success (reload = false) {
-      this.$message({
+    success (reload = false, id = false) {
+      console.log(id)
+      id ? this.$message({
+        message: "New User's ID is " + id,
+        type: 'success',
+        showClose: true,
+        duration: 0,
+      }) : this.$message({
         message: 'Success',
         type: 'success'
       });

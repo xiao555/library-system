@@ -21,6 +21,7 @@
           <el-table
             :data="scope.row.allbook"
             stripe
+            empty-text="No Data"
             style="width: 100%">
             <el-table-column
               label="BookID"
@@ -30,9 +31,9 @@
               label="Status"
               prop="status">
               <template slot-scope="scope">
-                {{ scope.row.status == '00' ? 'borrowed' :
-                   scope.row.status == '01' ? 'reserved' :
-                                          'available'}}
+                <el-tag type="success" v-if="scope.row.status == '10'">Available</el-tag>
+                <el-tag type="warning" v-if="scope.row.status == '01'">Reserved</el-tag>
+                <el-tag type="danger" v-if="scope.row.status == '00'">Borrowed</el-tag>
               </template>
             </el-table-column>
           </el-table>
@@ -155,7 +156,7 @@
 		},
 
 		mounted () {
-			this.load()
+			this.load(1)
 		},
 
     computed: {
@@ -186,7 +187,7 @@
             res.msg.forEach(item => {
               this.$store.state.everyBook[item.bookid] = item
               if (this.$store.state.books.hasOwnProperty(item.isbn)) {
-                this.$store.state.books[item.isbn].push(item.bookid)
+                this.$store.state.books[item.isbn].indexOf(item.bookid) == -1 && this.$store.state.books[item.isbn].push(item.bookid)
               } else {
                 this.$store.state.books[item.isbn] = []
                 this.$store.state.books[item.isbn].push(item.bookid)
@@ -273,12 +274,31 @@
         }
       },
       deleteBook () {
-        Conn.deleteBook({
-          bookid: this.book.bookid,
-          reason: this.book.reason,
-        }).then(res => {
-          res.type ? this.success() : this.$message.error(res.msg)
-        }).catch(err => console.error(err))
+        if (!this.$store.state.everyBook[this.book.bookid]) {
+          return this.$message.error('No this book')
+        }
+        let isbn = this.$store.state.everyBook[this.book.bookid].isbn
+        let bookid = this.book.bookid
+        let reason = this.book.reason
+        let self = this
+        Conn.everyBook({
+          bookid: bookid
+        }).then(st => {
+          if (st.type) {
+            if (st.msg.status == '10') {
+                return Conn.deleteBook({
+                  bookid: bookid,
+                  reason: 'ISBN('+ isbn +')' + reason,
+                }).then(res => {
+                  res.type ? self.success() : self.$message.error(res.msg)
+                }).catch(err => console.error(err))
+            } else {
+              self.$message.error(bookid + ' has been borrowed/reserved, delete failed!')
+            }
+          } else {
+            self.$message.error('Delete ' + item.name + ' failed: ' +res.msg)
+          }
+        }).catch(err => Promise.reject(err)) // api
       },
       success () {
         this.cancel()
@@ -289,31 +309,73 @@
         });
       },
       DeleteAll (index, book) {
-        let formdata = new FormData()
-        formdata.append('isbn', this.book.isbn)
-        formdata.append('reason', this.book.reason)
-        api.fetch('deleteAllBook', formdata).then(res => {
-          console.log(res)
-          if (res.code != 29) {
-            let message
-            switch(res.code) {
-              case 27:
-                message = 'Permission denied'
-                break
-              case 28:
-                message = 'Delete failed'
-                break
-            }
-            this.$message.error(message);
-          } else if (res.code == 29) {
-            this.cancel()
+        let isbn = this.book.isbn
+        let reason = this.book.reason
+        let books = this.$store.state.books[isbn]
+        let self = this
+        this.loading = true
+        function post() {
+					// 顺序执行Promise，预订成功的移出carts，失败的返回reject并提示错误信息。
+					let sequence = Promise.resolve()
+					for (let i = 0, j = books.length; i < j; i++) {
+						let bookid = books[i]
+						sequence = sequence.then(() => {
+              return Conn.everyBook({
+								bookid: bookid
+							}).then(st => {
+								if (st.type) {
+									if (st.msg.status == '10') {
+											return Conn.deleteBook({
+                        bookid: bookid,
+                        reason: 'ISBN('+ isbn +')' + reason,
+                      }).then(res => {
+                        res.type ? books.shift() : self.$message.error(bookid + ' delete failed : ' + res.msg)
+                      }).catch(err => console.error(err))
+									} else {
+										self.$message.error(bookid + ' has been borrowed/reserved, delete failed!')
+									}
+								} else {
+									self.$message.error('Reserve ' + item.name + ' failed: ' +res.msg)
+								}
+							}).catch(err => Promise.reject(err)) // api
+							
+						}) // sequence
+					} // for
+					return sequence
+				} // post
+
+				post().then(() => {
+					console.log(books.length)
+					if (books.length == 0) {
+            Conn.deleteAllBook({
+              isbn: isbn,
+              reason: reason
+            }).then(res => {
+              if (res.type) {
+                this.$message({
+                  message: 'Success',
+                  type: 'success',
+                  duration: 2000
+                });
+                this.load(true)
+                this.showCard = false
+              } else {
+                this.loading = false
+                this.$message.error(res.msg)
+              }
+            })
+					} else {
             this.load(true)
-            this.$message({
-              message: 'Success',
-              type: 'success'
-            });
+            this.showCard = false
           }
-        }).catch(err => console.error(err))
+				}, reason => {
+					this.$message({
+						message: reason,
+						type: 'error',
+						duration: 2000
+          });
+          this.load(true)
+				}).catch(err => console.error(err))
       }
 		}
 	}

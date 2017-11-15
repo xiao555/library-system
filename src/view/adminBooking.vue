@@ -10,6 +10,7 @@
 			</el-col> -->
 		</el-row>
     <el-table
+     v-loading="loading" element-loading-text="loding..."
      :data="result"
      stripe
      style="width: 100%"
@@ -165,14 +166,8 @@ export default {
       returnDialog: false,
       retBook: {},
       dialog: false,
-      diaConf: {
-        info: '',
-        action: {},
-        bookid: '',
-        uid: '',
-        recharge: '',
-        type: '',
-      }
+      diaConf: {},
+      loading: false
     }
   },
 
@@ -200,27 +195,34 @@ export default {
       this.diaConf.info = `Need to pay the amount of compensation: $${item.borrowexpense + 1.5 * item.price}.(BorrowExpress + 1.5 * Price)`
       this.diaConf.action = this.handleDamaged
       this.diaConf.bookid = item.bookid
+      this.diaConf.account = item.account
       this.diaConf.uid = item.uid
       this.diaConf.recharge = item.borrowexpense + 1.5 * item.price
       this.diaConf.type = 'damage'
     },
-    rechargeDialog (item) {
+    rechargeDialog (account, uid) {
       this.dialog = true,
-      this.diaConf.info = `Insufficient account balance, please recharge and continue.(At least $${item.borrowexpense - item.account} needed)`
+      this.diaConf.info = `Insufficient account balance, please recharge and continue.(At least $${account} needed)`
       this.diaConf.action = this.handleRecharge
+      this.diaConf.uid = uid
+      this.diaConf.recharge = ''
       this.diaConf.type = 'recharge'
     },
     // 充值
     handleRecharge () {
       Conn.recharge({
-        uid: this.retBook.uid,
+        uid: this.diaConf.uid,
         account: this.diaConf.recharge
       }).then(res => {
-        res.type ? this.handleReturn() : this.$message.error(res.msg)
+        res.type ? this.diaConf.cb() : this.$message.error(res.msg)
       }).catch(err => console.error(err))
     },
     // 扣费
     handleDamaged () {
+      if (this.dialog.account < this.dialog.recharge) {
+        this.diaConf.cb = this.handleDamaged
+        return this.rechargeDialog(this.dialog.recharge - this.dialog.account, this.diaConf.uid)
+      }
       Conn.deleteUserAccount({
         uid: this.diaConf.uid,
         account: this.diaConf.recharge
@@ -244,6 +246,7 @@ export default {
     },
     load () {
       this.$bar.start()
+      this.loading = true
       if (this.$store.state.lists.hasOwnProperty('users')) {
         return this.getUserBooks(this.$store.state.lists['users'])
       }
@@ -290,7 +293,7 @@ export default {
               }
             }
           })
-          console.log(this.borrows.length)
+          this.loading = false
         }).catch(err => console.error(err))
       })
     },
@@ -307,7 +310,8 @@ export default {
       item.needmoney = item.borrowexpense
       this.retBook = item
       if (item.account < item.borrowexpense) {
-        return this.rechargeDialog(item)
+        this.diaConf.cb =  this.handleReturn
+        return this.rechargeDialog(item.borrowexpense - item.account, item.uid)
       } else {
         this.returnDialog = true
       }

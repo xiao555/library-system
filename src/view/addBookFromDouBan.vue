@@ -80,6 +80,7 @@
   import { imgUrl } from '../../config'
   import { getImageBlob } from '../utils/blob'
   import * as _ from '../utils'
+  import * as Conn from '../utils/connection'
 
 	export default {
 		name: 'addBookFromDouBan',
@@ -122,43 +123,27 @@
         this.book = book
       },
       upload () {
-        // this.isLogin()
-        let formdata = new FormData()
-        // let blob = getImageBlob(this.book.myfile)
-        // console.log(blob);
+        let data = {}
         for (var item in this.book) {
           if (this.book.hasOwnProperty(item) && item !== 'myfile') {
             if (item == 'info') {
-              formdata.append(item, 'IMG(' + this.book.myfile + ')' + this.book[item])
+              data[item] = 'IMG(' + this.book.myfile + ')' + this.book[item]
             } else {
-              formdata.append(item, this.book[item])
+              data[item] = this.book[item]
             }
           }
         }
-        api.addBook(formdata).then(res => {
-          if (res.code != 26) {
-            let message
-            switch(res.code) {
-              case 12:
-                message = 'Invaild Data'
-                break
-              case 24:
-                message = 'Permission denied'
-                break
-              case 25:
-                message = 'Insert failed'
-                break
-            }
-            this.$message.error(message);
-          } else if (res.code == 26) {
-            this.cancel()
-            this.$message({
-              message: 'Success',
-              type: 'success',
-              duration: 1000
-            });
-          }
+        Conn.addBook(data).then(res => {
+          res.type ? this.uploadSuccess() : this.$message.error(res.msg)
         }).catch(err => console.error(err))
+      },
+      uploadSuccess () {
+        this.cancel()
+        this.$message({
+          message: 'Success',
+          type: 'success',
+          duration: 1000
+        });
       },
       cancel () {
         this.showCard = false

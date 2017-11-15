@@ -1,11 +1,13 @@
 import api from '../api'
 import * as DateUtils from './date'
+import xssFilters from 'xss-filters'
+
 // 封装成FormData
 function formatFormData (data) {
   let formdata = new FormData()
   for (let item in data) {
     if (data.hasOwnProperty(item)) {
-      formdata.append(item, data[item])
+      formdata.append(item, xssFilters.inHTMLData(data[item]))
     }
   }
   return formdata
@@ -25,7 +27,7 @@ function resMsg(res) {
       message = 'The user name or password can not be empty'
       break
     case 9:
-      message = 'wrong password'
+      message = 'User not exist'
       break
     case 10:
       message = 'wrong user name or password'
@@ -45,8 +47,17 @@ function resMsg(res) {
     case 17:
       message = 'You did not borrow this book'
       break;
+    case 18:
+      message = 'Return failed'
+      break;
     case 21:
       message = 'Query failed, please reload.'
+      break
+    case 24:
+      message = 'Permission denied'
+      break
+    case 25:
+      message = 'Insert failed'
       break
     case 27:
       message = 'Permission denied'
@@ -56,6 +67,9 @@ function resMsg(res) {
       break
     case 133:
       message = 'Your account balance is not enough'
+      break;
+    case 134:
+      message = 'This book has been booked or borrowed'
       break;
 
     default:
@@ -117,7 +131,7 @@ export function register(data) {
     if (res.code != 26) {
       return cb(0, resMsg(res))
     } else if (res.code == 26) {
-      return cb(1)
+      return cb(1, res.data)
     }
   })
 }
@@ -421,6 +435,27 @@ export function deleteBook (data) {
     if (res.code != 29) {
       return cb(0, resMsg(res))
     } else if (res.code == 29) {
+      return cb(1)
+    }
+  })
+}
+// 删除书
+export function deleteAllBook (data) {
+  return api.fetch('deleteAllBook', formatFormData(data)).then(res => {
+    if (res.code != 29) {
+      return cb(0, resMsg(res))
+    } else if (res.code == 29) {
+      return cb(1)
+    }
+  })
+}
+
+// 添加书
+export function addBook (data) {
+  return api.fetch('addBook', formatFormData(data)).then(res => {
+    if (res.code != 26) {
+      return cb(0, resMsg(res))
+    } else if (res.code == 26) {
       return cb(1)
     }
   })

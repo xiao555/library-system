@@ -80,6 +80,12 @@ export default {
 
   mounted () {
     this.socket = io('http://localhost:8007');
+    // if (sessionStorage.getItem('nickname')) {
+    //   this.username = this.nickname = sessionStorage.getItem('nickname')
+    //   this.chatLogin = false
+    //   this.initSocketEvent()
+    //   this.socket.emit('add user', this.username);
+    // }
   },
 
   methods: {
@@ -152,6 +158,7 @@ export default {
     },
     loginChat () {
       this.username = this.nickname
+      // sessionStorage.setItem('nickname', this.nickname)
       this.chatLogin = false
       this.initSocketEvent()
       this.username = xssFilters.inHTMLData(this.username)
@@ -283,6 +290,7 @@ export default {
   cursor pointer
   transition all .8s cubic-bezier(0.18, 0.89, 0.32, 1.28)
   color white
+  z-index 99
   &:hover
     background #7CD5B1
     i

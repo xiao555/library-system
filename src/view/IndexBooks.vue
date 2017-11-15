@@ -14,7 +14,7 @@
 					<p>If you book the book on Thursday,Friday or Saturday ,then you can come to fetch the book on Monday,Tuesday or Wednesday.</p>
 					<p>You can not book the book on Sunday.</p>
 					<h6>Reservation Expence</h6>
-					<p>$10 / a book</p>
+					<p>$10 per book</p>
 					<p>If you cancel reservation, you will get $5 back.</p>
 					<p>If you do not pick up the book in accordance with the specified time, the order will be canceled, the cost will not be returned</p>
 				</el-popover>
@@ -169,7 +169,8 @@
 				return this.$store.state.user
 			},
 			availableBook () {
-				return 2 - this.user.numofbook - this.carts.length
+				let count = 2 - this.user.numofbook - this.carts.length
+				return count > 0 ? count : 0
 			},
 			canBook () {
 				return new Date().getDay() !== 4
@@ -177,9 +178,6 @@
 		},
 
 		methods: {
-			showRules () {
-
-			},
       load () {
 				this.$bar.start()
         this.$store.dispatch('FETCH_LISTS', {
@@ -199,7 +197,10 @@
 					})
 					this.books = books
 					this.$bar.finish()
-        })
+				})
+				if (this.carts.length > this.availableBook) {
+					this.carts = []
+				}
       },
 			addCart (obj) {
 				if (this.availableBook == 0) {
@@ -215,7 +216,7 @@
 					// 获取可借bookid
 					obj.availableBooks = []
 					this.$store.state.books[obj.isbn].forEach(item => {
-						if (this.$store.state.everyBook[item].status == '10') {
+						if (this.$store.state.everyBook[item].status == '10' && obj.availableBooks.indexOf(item) == -1) {
 							obj.availableBooks.push(item)
 						}
 					})

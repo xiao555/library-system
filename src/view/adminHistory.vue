@@ -7,6 +7,7 @@
 			</el-col>
 		</el-row>
     <el-table
+     v-loading="loading" element-loading-text="loding..."
      :data="result"
      stripe
      style="width: 100%"
@@ -32,10 +33,6 @@
         prop="uid"
         label="UID"
         sortable>
-      </el-table-column>
-      <el-table-column
-        prop="user"
-        label="User">
       </el-table-column>
       <el-table-column
         prop="bookid"
@@ -92,6 +89,7 @@ export default {
       query: '',
       borrows: [],
       users: {},
+      loading: false,
     }
   },
 
@@ -102,8 +100,7 @@ export default {
     result () {
       if (this.query == '') return this.borrows
       return this.borrows.filter(item => {
-        return item.user.toLowerCase().indexOf(this.query.toLowerCase()) !== -1 ||
-          item.uid.indexOf(this.query) !== -1 ||
+        return item.uid.indexOf(this.query) !== -1 ||
           item.bookid.indexOf(this.query) !== -1
       })
     }
@@ -116,6 +113,7 @@ export default {
   methods: {
     load () {
       this.$bar.start()
+      this.loading = true
       if (this.$store.state.lists.hasOwnProperty('users')) {
         return this.getUserBooks(this.$store.state.lists['users'])
       }
@@ -142,12 +140,12 @@ export default {
           uid: item.uid
         }).then(res => {
           res.type && res.msg.forEach(record => {
-              record['user'] = item.name
               record['uid'] = item.uid
               record['account'] = item.account
               record.id = record.returnid || record.reservehistoryid
               this.borrows.push(record)
             })
+          this.loading = false
         }).catch(err => console.error(err))
       })
     },

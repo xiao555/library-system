@@ -8,43 +8,38 @@
     </div>
     <header>
       <el-menu theme="dark" class="el-menu-demo" mode="horizontal">
-        <router-link :to="{ path: '/admin/booking' }">
-        <el-menu-item index="1">
-  				Admin
-  			</el-menu-item>
-        </router-link>
         <router-link :to="{ path: '/admin/users' }">
-        <el-menu-item index="2">
+        <el-menu-item index="1">
   				UserList
   			</el-menu-item>
         </router-link>
         <router-link :to="{ path: '/admin/books' }">
-  			<el-menu-item index="3">
+  			<el-menu-item index="2">
   				BookList
   			</el-menu-item>
         </router-link>
         <router-link :to="{ path: '/admin/booking' }">
-        <el-menu-item index="4">
+        <el-menu-item index="3">
   				Bor/Res List
   			</el-menu-item>
         </router-link>
         <router-link :to="{ path: '/admin/history' }">
-  			<el-menu-item index="5">
+  			<el-menu-item index="4">
   				Bor/Res History
   			</el-menu-item>
         </router-link>
         <router-link :to="{ path: '/admin/delete' }">
-  			<el-menu-item index="6">
+  			<el-menu-item index="5">
   				Delete History
   			</el-menu-item>
         </router-link>
         <router-link :to="{ path: '/admin/add-books-from-douban' }">
-        <el-menu-item index="7">
+        <el-menu-item index="6">
   				DouBan
   			</el-menu-item>
         </router-link>
         <router-link :to="{ path: '/books' }">
-        <el-menu-item index="8" style="float: right">
+        <el-menu-item index="7" style="float: right">
   				Back to Home
   			</el-menu-item>
         </router-link>
@@ -74,18 +69,27 @@ export default {
     }
   },
 
-  mounted () {
-    if (!sessionStorage.getItem('admin') && this.$route.path !== '/admin/login') {
-      this.$message.error('Please sign in first!');
-      return setTimeout(() => {
-        this.$router.push({ path: '/admin/login' })
-      }, 2000)
-    } else if (sessionStorage.getItem('admin')) {
-      this.isLogin = true
+  watch: {
+    '$route' (to, from) {
+      this.load()
     }
   },
 
+  mounted () {
+    this.load()
+  },
+
   methods: {
+    load () {
+      if (!sessionStorage.getItem('admin') && this.$route.path !== '/admin/login') {
+        this.$message.error('Please sign in first!');
+        return setTimeout(() => {
+          this.$router.push({ path: '/admin/login' })
+        }, 2000)
+      } else if (sessionStorage.getItem('admin')) {
+        this.isLogin = true
+      }
+    },
     // 登录钩子
     login () {
       this.isLogin = true
