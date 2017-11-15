@@ -85,6 +85,7 @@ function search ({query, type = 1, count}) {
             }
           }
         }
+        data.info = data.info.replace('\'', '')
         data.myfile = typeof item.images == 'string' ? item.images : item.images.large
         results.push(data)
       })

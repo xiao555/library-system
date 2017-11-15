@@ -30,10 +30,6 @@
         label="UID">
       </el-table-column>
       <el-table-column
-        prop="user"
-        label="User">
-      </el-table-column>
-      <el-table-column
         prop="bookid"
         label="BID">
       </el-table-column>
@@ -69,7 +65,7 @@
       <el-table-column
         fixed="right"
         label="Action"
-        width="150">
+        width="200">
         <template slot-scope="scope">
           <el-button
             v-if="scope.row.status == 'unreturn'"
@@ -77,6 +73,13 @@
             type="mini"
             size="small">
             Return
+          </el-button>
+          <el-button
+            v-if="scope.row.status == 'unreturn'"
+            @click="damagedDialog(scope.row)"
+            type="mini"
+            size="small">
+            Damaged
           </el-button>
           <el-button 
             v-if="scope.row.status == 'untake'" 
@@ -102,6 +105,9 @@
           <el-button style="float: right;" size="small" type="primary" @click="onSubmit()" >Confirm</el-button>
         </div>
         <el-form ref="form" :model="form" label-width="80px">
+          <el-form-item label="Scanning BID">
+            <el-input v-model="form.bid" placeholder="Scanning the BookID"></el-input>
+          </el-form-item>
           <el-form-item label="UID">
             <el-input v-model="form.uid" disabled></el-input>
           </el-form-item>
@@ -116,9 +122,6 @@
           </el-form-item>
           <el-form-item label="Expensee">
             <el-input v-model="form.reserveexpense" disabled></el-input>
-          </el-form-item>
-          <el-form-item label="Scanning BID">
-            <el-input v-model="form.bid" placeholder="Scanning the BookID"></el-input>
           </el-form-item>
         </el-form>
       </div>
@@ -135,9 +138,10 @@
     </el-dialog>
     <el-dialog title="Alert" v-model="dialog" size="tiny">
       <p>{{ diaConf.info }}</p>
+      <el-input v-if="diaConf.type == 'recharge'" v-model="diaConf.recharge" placeholder="Input the mount of recharge"></el-input>
       <span slot="footer" class="dialog-footer">
         <el-button @click="cancelDialog">Cancel</el-button>
-        <el-button type="primary" @click="diaConf.action">Yes</el-button>
+        <el-button type="primary" @click="diaConf.action">{{ (diaConf.type == 'recharge' || diaConf.type == 'damage') ? 'Continue' : 'Yes'}}</el-button>
       </span>
     </el-dialog>
 	</div>
@@ -165,6 +169,9 @@ export default {
         info: '',
         action: {},
         bookid: '',
+        uid: '',
+        recharge: '',
+        type: '',
       }
     }
   },
@@ -176,8 +183,7 @@ export default {
     result () {
       if (this.query == '') return this.borrows
       return this.borrows.filter(item => {
-        return item.user.toLowerCase().indexOf(this.query.toLowerCase()) !== -1 ||
-          item.uid.indexOf(this.query) !== -1 ||
+        return item.uid.indexOf(this.query) !== -1 ||
           item.bookid.indexOf(this.query) !== -1
       })
     }
@@ -188,6 +194,48 @@ export default {
   },
 
   methods: {
+    // 损坏
+    damagedDialog (item) {
+      this.dialog = true,
+      this.diaConf.info = `Need to pay the amount of compensation: $${item.borrowexpense + 1.5 * item.price}.(BorrowExpress + 1.5 * Price)`
+      this.diaConf.action = this.handleDamaged
+      this.diaConf.bookid = item.bookid
+      this.diaConf.uid = item.uid
+      this.diaConf.recharge = item.borrowexpense + 1.5 * item.price
+      this.diaConf.type = 'damage'
+    },
+    rechargeDialog (item) {
+      this.dialog = true,
+      this.diaConf.info = `Insufficient account balance, please recharge and continue.(At least $${item.borrowexpense - item.account} needed)`
+      this.diaConf.action = this.handleRecharge
+      this.diaConf.type = 'recharge'
+    },
+    // 充值
+    handleRecharge () {
+      Conn.recharge({
+        uid: this.retBook.uid,
+        account: this.diaConf.recharge
+      }).then(res => {
+        res.type ? this.handleReturn() : this.$message.error(res.msg)
+      }).catch(err => console.error(err))
+    },
+    // 扣费
+    handleDamaged () {
+      Conn.deleteUserAccount({
+        uid: this.diaConf.uid,
+        account: this.diaConf.recharge
+      }).then(res => {
+        res.type ? this.deleteBook() : this.$message.error(res.msg)
+      }).catch(err => console.error(err))
+    },
+    deleteBook () {
+      Conn.deleteBook({
+        bookid: this.diaConf.bookid,
+        reason: 'damage',
+      }).then(res => {
+        res.type ? this.success() : this.$message.error(res.msg)
+      }).catch(err => console.error(err))
+    },
     cancelReserveDialog (item) {
       this.dialog = true,
       this.diaConf.info = `Are you sure to cancel ${item.uid}'s reserve?`
@@ -231,12 +279,13 @@ export default {
             } else {
               if (this.$store.state.everyBook[record.bookid]) {
                 record.name = this.$store.state.everyBook[record.bookid].name
+                record.price = this.$store.state.everyBook[record.bookid].price
                 this.borrows.push(record)
               } else {
                 Conn.everyBook({
                   bookid: record.bookid
                 }).then(res => {
-                  res.type ? (record.name = res.msg.name,this.borrows.push(record)) : ''
+                  res.type ? (record.name = res.msg.name,record.price = res.msg.price,this.borrows.push(record)) : ''
                 }).catch(err => console.error(err))
               }
             }
@@ -255,12 +304,12 @@ export default {
       this.form.reservetime = DateUtils.format(Date.now())
     },
     returnBook (index, item) {
+      item.needmoney = item.borrowexpense
+      this.retBook = item
       if (item.account < item.borrowexpense) {
-        return this.$message.error('Insufficient account balance, please recharge.(At least $' + (item.borrowexpense - item.account) +' needed)');
+        return this.rechargeDialog(item)
       } else {
-        item.needmoney = item.borrowexpense
         this.returnDialog = true
-        this.retBook = item
       }
     },
     cancelDialog () {

@@ -33,8 +33,13 @@
   				Bor/Res History
   			</el-menu-item>
         </router-link>
+        <router-link :to="{ path: '/admin/delete' }">
+  			<el-menu-item index="6">
+  				Delete History
+  			</el-menu-item>
+        </router-link>
         <router-link :to="{ path: '/admin/add-books-from-douban' }">
-        <el-menu-item index="6">
+        <el-menu-item index="7">
   				DouBan
   			</el-menu-item>
         </router-link>
@@ -112,9 +117,12 @@ main
   border none
   border-radius 0
   .container
-    margin 100px auto
+    position absolute
+    top 50%
+    left 50%
+    transform translate(-50%, -50%)
     width 85%
-    height 400px
+    max-height 520px
     max-width 400px
     background #fff
     padding 20px

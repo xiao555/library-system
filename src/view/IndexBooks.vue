@@ -2,7 +2,25 @@
 	<div class = "container">
 		<el-row>
 			<el-col :xs="24" :sm="6" class="aside">
-				<el-row>Cart</el-row>
+				<el-row>Cart
+				<el-popover
+					ref="popover1"
+					placement="bottom"
+					width="400"
+					trigger="hover">
+					<h6>Reserve Rule</h6>
+					<p>The upper limit for the number of borrowed or booked books per person is 2</p>
+					<p>If you book the book on Monday,Tuesday or Wednesday,then you can come to fetch the book on Friday,Saturday or Sunday.</p>
+					<p>If you book the book on Thursday,Friday or Saturday ,then you can come to fetch the book on Monday,Tuesday or Wednesday.</p>
+					<p>You can not book the book on Sunday.</p>
+					<h6>Reservation Expence</h6>
+					<p>$10 / a book</p>
+					<p>If you cancel reservation, you will get $5 back.</p>
+					<p>If you do not pick up the book in accordance with the specified time, the order will be canceled, the cost will not be returned</p>
+				</el-popover>
+				<el-button type="text" v-popover:popover1><i class="fa fa-question-circle" aria-hidden="true"></i></el-button>
+				</el-row>
+				
 				<el-row v-if="user.hasOwnProperty('uid')">Your can reserve {{ availableBook }} books</el-row>
 				<el-row>
 					<el-col style = "margin-bottom: 10px;" :span = "24" v-for = "item in carts" :key = "item.bookid">
@@ -44,17 +62,18 @@
           <el-button style="float: right;" size="small" type="primary" @click="book()" >Confirm</el-button>
         </div>
 				<div class="block">
+					You should take this books on <el-tag type="primary" style="margin: 0 10px" v-for="item in borrowDate" :key="item.value">{{item.date}} - {{item.value}}</el-tag>
 				 <el-table
 			    :data="carts"
 			    stripe
 			    style="width: 100%">
+					<el-table-column
+			      prop="isbn"
+			      label="ISBN">
+			    </el-table-column>
 			    <el-table-column
 			      prop="name"
 			      label="Name">
-			    </el-table-column>
-			    <el-table-column
-			      prop="type"
-			      label="Type">
 			    </el-table-column>
 					<el-table-column
 			      label="Expense">
@@ -75,7 +94,7 @@
 							</el-select>
 						</template>
 			    </el-table-column>
-			    <el-table-column
+			    <!-- <el-table-column
 			      label="Borrow Date">
 						<template slot-scope="scope">
 							<el-select v-model="scope.row.reservetime" placeholder="Choose Date">
@@ -90,7 +109,7 @@
 								</el-option>
 							</el-select>
 						</template>
-			    </el-table-column>
+			    </el-table-column> -->
 			  </el-table>
 			 </div>
       </div>
@@ -123,7 +142,8 @@
 				query: '',
 				showCard: false,
 				imgUrl: imgUrl,
-				availableBooks: []
+				availableBooks: [],
+				borrowDate: {},
 			}
 		},
 		beforeMount () {
@@ -157,6 +177,9 @@
 		},
 
 		methods: {
+			showRules () {
+
+			},
       load () {
 				this.$bar.start()
         this.$store.dispatch('FETCH_LISTS', {
@@ -197,7 +220,7 @@
 						}
 					})
 					// 获取可取书时间
-					obj.borrowDate = DateUtils.getBorrowDates()
+					this.borrowDate = DateUtils.getBorrowDates()
 
 					// 将商品加入购物车
 					this.$store.commit('ADD_TO_CART', obj)
@@ -237,11 +260,23 @@
 						let data = {
 							uid: uid,
 							bookid: item.bookid || '',
-							reservetime: item.reservetime || ''
+							reservetime: DateUtils.format(Date.now())
 						}
 						sequence = sequence.then(() => {
-							return Conn.reserveBook(data).then(res => {
-								return res.type ? carts.shift() : Promise.reject('Reserve ' + item.name + ' failed: ' +res.msg)
+							return Conn.everyBook({
+								bookid: item.bookid
+							}).then(st => {
+								if (st.type) {
+									if (st.msg.status == '10') {
+											return Conn.reserveBook(data).then(res => {
+												return res.type ? carts.shift() : Promise.reject('Reserve ' + item.name + ' failed: ' +res.msg)
+											}).catch(err => Promise.reject(err)) // api
+									} else {
+										self.$message.error(item.bookid + ' has been borrowed, please choose another one!')
+									}
+								} else {
+									self.$message.error('Reserve ' + item.name + ' failed: ' +res.msg)
+								}
 							}).catch(err => Promise.reject(err)) // api
 						}) // sequence
 					} // for
@@ -249,12 +284,15 @@
 				} // post
 
 				post().then(() => {
-					this.$message({
-						message: 'Success，please take books in time',
-						type: 'success',
-						duration: 2000
-					});
-					this.showCard = false
+					console.log(this.carts.length)
+					if (this.carts.length == 0) {
+						this.$message({
+							message: 'Success，please take books in time',
+							type: 'success',
+							duration: 2000
+						});
+						this.showCard = false
+					}
 				}, reason => {
 					this.$message({
 						message: reason,

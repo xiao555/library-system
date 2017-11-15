@@ -25,7 +25,7 @@ function resMsg(res) {
       message = 'The user name or password can not be empty'
       break
     case 9:
-      message = 'Username does not exist'
+      message = 'wrong password'
       break
     case 10:
       message = 'wrong user name or password'
@@ -42,8 +42,17 @@ function resMsg(res) {
     case 16:
       message = 'You have borrowed this book, have not returned'
       break;
+    case 17:
+      message = 'You did not borrow this book'
+      break;
     case 21:
       message = 'Query failed, please reload.'
+      break
+    case 27:
+      message = 'Permission denied'
+      break
+    case 28:
+      message = 'Delete failed'
       break
     case 133:
       message = 'Your account balance is not enough'
@@ -81,6 +90,18 @@ export function deleteUser(data) {
 // 充值
 export function recharge(data) {
   return api.fetch('recharge', formatFormData(data)).then(res => {
+    console.log(res)
+    if (res.code != 26) {
+      return cb(0, resMsg(res))
+    } else if (res.code == 26) {
+      return cb(1)
+    }
+  })
+}
+
+// 扣费
+export function deleteUserAccount(data) {
+  return api.fetch('deleteUserAccount', formatFormData(data)).then(res => {
     console.log(res)
     if (res.code != 26) {
       return cb(0, resMsg(res))
@@ -378,6 +399,28 @@ export function adminAlterPasswd(data) {
     if (res.code != 32) {
       return cb(0, resMsg(res))
     } else if (res.code == 32) {
+      return cb(1)
+    }
+  })
+}
+// 查询删除书历史
+export function deleteHistory() {
+  return api.fetch('deleteHistory').then(res => {
+    console.log(res)
+    if (res.code != 22) {
+      return cb(0, resMsg(res))
+    } else if (res.code == 22) {
+      return cb(1,res.data)
+    }
+  })
+}
+
+// 删除书
+export function deleteBook (data) {
+  return api.fetch('deleteBook', formatFormData(data)).then(res => {
+    if (res.code != 29) {
+      return cb(0, resMsg(res))
+    } else if (res.code == 29) {
       return cb(1)
     }
   })

@@ -3,8 +3,12 @@
     <h2>Hello, {{ user.uid }}</h2>
     <div class="content">
       <h4>Your Information</h4>
-      <p>Account: {{ user.account }} / Borrowing: {{ user.numofbook }}</p>
-      <el-button size="small" @click="changePasswd()">change Password</el-button>
+      <p>Account: 
+        <el-tooltip class="item" effect="dark" content="If you owe more than $50, you will not be able to borrow or reserve books." placement="right">
+          <el-button type="text">{{ user.account }}</el-button>
+        </el-tooltip>
+      </p>
+      <el-button size="small" type="primary" @click="changePasswd()">change Password</el-button>
     </div>
     <div class="content">
       <h4>Your Borrow/Reserve</h4>

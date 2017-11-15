@@ -79,7 +79,7 @@ export default {
   },
 
   mounted () {
-    if (sessionStorage.getItem('uid') && !this.user.hasOwnProperty('uid'))  {
+    if (sessionStorage.getItem('uid'))  {
       this.isLogin = true
       Conn.getUserInfo({
         uid: sessionStorage.getItem('uid')

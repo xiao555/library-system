@@ -164,7 +164,10 @@
 				return self.books.filter(function (book) {
 					return book.name.toLowerCase().indexOf(self.query.toLowerCase()) !== -1 ||
             book.type.toLowerCase().indexOf(self.query.toLowerCase()) !== -1 ||
-            book.isbn.indexOf(self.query) !== -1
+            book.isbn.indexOf(self.query) !== -1 ||
+            book.allbook.some((val, index) => {
+              return val.bookid == self.query
+            })
 				})
 			}
     },
@@ -270,30 +273,20 @@
         }
       },
       deleteBook () {
-        let formdata = new FormData()
-        formdata.append('bookid', this.book.bookid)
-        formdata.append('reason', this.book.reason)
-        api.fetch('deleteBook', formdata).then(res => {
-          if (res.code != 29) {
-            let message
-            switch(res.code) {
-              case 27:
-                message = 'Permission denied'
-                break
-              case 28:
-                message = 'Delete failed'
-                break
-            }
-            this.$message.error(message);
-          } else if (res.code == 29) {
-            this.cancel()
-            this.load(true)
-            this.$message({
-              message: 'Success',
-              type: 'success'
-            });
-          }
+        Conn.deleteBook({
+          bookid: this.book.bookid,
+          reason: this.book.reason,
+        }).then(res => {
+          res.type ? this.success() : this.$message.error(res.msg)
         }).catch(err => console.error(err))
+      },
+      success () {
+        this.cancel()
+        this.load(true)
+        this.$message({
+          message: 'Success',
+          type: 'success'
+        });
       },
       DeleteAll (index, book) {
         let formdata = new FormData()

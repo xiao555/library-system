@@ -17,6 +17,7 @@ const adminBooks = () => import('../view/adminBooks.vue')
 const adminBooking = () => import('../view/adminBooking.vue')
 const adminHistory = () => import('../view/adminHistory.vue')
 const adminUsers = () => import('../view/adminUsers.vue')
+const adminBookDelete = () => import('../view/adminBookDelete.vue')
 const Douban = () => import('../view/addBookFromDouBan.vue')
 
 Vue.use(Router)
@@ -58,7 +59,7 @@ export function createRouter () {
           path: 'history/:id',
           name: 'history',
           component: UserHistory
-        }
+        },
       ]},
       { path: '/admin', component: Admin, children: [
         {
@@ -85,6 +86,10 @@ export function createRouter () {
           path: 'history',
           name: 'adminHistory',
           component: adminHistory
+        }, {
+          path: 'delete',
+          name: 'adminBookDelete',
+          component: adminBookDelete
         }
       ]}
     ]

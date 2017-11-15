@@ -110,7 +110,7 @@
           }).then(res => {
             console.log(res)
             arguments[3](res)
-          })
+          }).catch(err => this.$message.error(err))
         }, 500)
       },
     },
