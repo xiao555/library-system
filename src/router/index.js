@@ -71,7 +71,7 @@ export function createRouter () {
           name: 'adminBooks',
           component: adminBooks
         }, {
-          path: 'add-books-from-douban',
+          path: 'add-books',
           name: 'addBooksFromDouban',
           component: Douban
         }, {

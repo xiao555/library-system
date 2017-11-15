@@ -33,9 +33,9 @@
   				Delete History
   			</el-menu-item>
         </router-link>
-        <router-link :to="{ path: '/admin/add-books-from-douban' }">
+        <router-link :to="{ path: '/admin/add-books' }">
         <el-menu-item index="6">
-  				DouBan
+  				Upload
   			</el-menu-item>
         </router-link>
         <router-link :to="{ path: '/books' }">
