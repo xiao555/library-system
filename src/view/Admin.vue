@@ -108,7 +108,7 @@ a
 
 main
   margin 0 auto
-  width 90%
+  padding 0 20px
 
 .book-card
   position fixed

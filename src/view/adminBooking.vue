@@ -166,7 +166,9 @@ export default {
       returnDialog: false,
       retBook: {},
       dialog: false,
-      diaConf: {},
+      diaConf: {
+        action: ''
+      },
       loading: false
     }
   },

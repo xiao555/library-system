@@ -265,6 +265,9 @@ export default {
     },
     // 删除用户
     handleDelete () {
+      if (this.user.numofbook > 0) {
+        return this.$message.error('This user has borrowed/reserved books!')
+      }
       Conn.deleteUser({
         uid: this.user.uid
       }).then(res => {
@@ -273,9 +276,30 @@ export default {
     },
     // 借书
     handleBorrow () {
-      Conn.borrowBook(this.user).then(res => {
-        res.type ? this.success(1) : this.error(res.msg)
+      let bookid = this.user.bookid
+      let uid = this.user.uid
+      let borrowtime = this.user.borrowtime
+      let self = this
+      Conn.everyBook({
+        bookid: bookid
+      }).then(st => {
+        if (st.type) {
+          if (st.msg.status == '10') {
+            return Conn.borrowBook({
+              uid: uid,
+              bookid: bookid,
+              borrowtime: borrowtime
+            }).then(res => {
+              res.type ? self.success(1) : self.$message.error(res.msg)
+            }).catch(err => console.error(err))
+          } else {
+            self.$message.error(bookid + ' has been borrowed/reserved!')
+          }
+        } else {
+          self.$message.error('Borrow ' + item.name + ' failed: ' +res.msg)
+        }
       }).catch(err => console.error(err))
+      
     },
     // 操作成功
     success (reload = false, id = false) {
